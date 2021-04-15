@@ -3,7 +3,7 @@ import { Text, Input, Flex, Button } from '@chakra-ui/react';
 
 function Chat({ messages }) {
   return (
-    <Flex h="90%" flexDirection="column">
+    <Flex h="80%" flexDirection="column">
       {messages.map((message, i) => (
         <>
           <Flex w="100%" justify="space-between">

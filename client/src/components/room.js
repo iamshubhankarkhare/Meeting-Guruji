@@ -3,6 +3,7 @@ import queryString from 'query-string';
 import { Text, Input, Flex, Button } from '@chakra-ui/react';
 import io from 'socket.io-client';
 import Chat from './chat.js';
+import Participants from "./participants.js";
 
 let socket;
 function Room({ location }) {
@@ -10,6 +11,8 @@ function Room({ location }) {
   const [room, setRoom] = useState('');
   const [messages, setMessages] = useState([]);
   const [newMsg, setNewMsg] = useState('');
+  const [showChat, setShowChat] = useState(true);
+  const [participants, setParticipants] = useState([]);
 
   const ENDPOINT = 'http://localhost:5000/';
   useEffect(() => {
@@ -30,6 +33,15 @@ function Room({ location }) {
     });
   }, [messages, name]);
 
+  useEffect(() => {
+    socket.on('newParticipant', (newParticpantsRoom, users) => {
+      if (room === newParticpantsRoom){
+        console.log("All users in the room: ", users);
+        setParticipants(users);
+      }
+    })
+  });
+
   const handleChange = (event) => setNewMsg(event.target.value);
 
   const handleClick = () => {
@@ -43,6 +55,11 @@ function Room({ location }) {
       () => setNewMsg('')
     );
   };
+
+  const showChatHandler = (showChatState) => {
+    setShowChat(showChatState);
+  }
+
   return (
     <Flex h="100%">
       <Flex bg="blue.200" h="100%" w="75%" flexDirection="column">
@@ -62,7 +79,11 @@ function Room({ location }) {
         </Flex>
       </Flex>
       <Flex h="100%" w="25%" flexDirection="column">
-        <Chat messages={messages} />
+        <Flex h="10%" mx="4">
+          <Button size="md" ml="4" colorScheme="blue" onClick={() => showChatHandler(true)}>Chat</Button>
+          <Button size="md" ml="4" colorScheme="blue" onClick={() => showChatHandler(false)}>Participants</Button>
+        </Flex>
+        {showChat === true ? <Chat messages={messages} /> : <Participants participants={participants} />}
         <Flex h="10%" mx="4">
           <Input
             w="75%"
