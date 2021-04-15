@@ -13,16 +13,14 @@ function Join() {
     socket = io(ENDPOINT);
   }, [ENDPOINT]);
 
-  useEffect(() => {
-    socket.on('getrooms', (rooms) => {
-      console.log(rooms);
-    });
-  }, []);
+  useEffect(() => {}, []);
 
   const handleClick = () => {
-    console.log(name);
-    const room = 'room1';
-    window.location.replace(`/room?name=${name}&room=${room}`);
+    socket.emit('getrooms', { name }, (room) => {
+      console.log(room);
+      console.log(name);
+      window.location.replace(`/room?name=${name}&room=${room}`);
+    });
   };
   return (
     <Flex w="100%" h="100%">
