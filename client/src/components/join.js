@@ -13,7 +13,6 @@ function Join() {
     socket = io(ENDPOINT);
   }, [ENDPOINT]);
 
-  useEffect(() => {}, []);
 
   const handleClick = () => {
     socket.emit('getrooms', { name }, (room) => {
