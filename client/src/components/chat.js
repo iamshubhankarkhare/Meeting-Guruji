@@ -14,7 +14,7 @@ function Chat({ messages }) {
               color={`${message.user === 'Bot' ? 'gray.500' : ''}`}
               as={`${message.user === 'Bot' ? 'i' : ''}`}
             >
-              {message.user}
+              {`${message.user} to ${message.to}`}
             </Text>
             <Text mt="4" mx="4" color="gray.400">
               {message.time}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import queryString from 'query-string';
-import { Text, Input, Flex, Button } from '@chakra-ui/react';
+import { Text, Input, Flex, Button, Select } from '@chakra-ui/react';
 import io from 'socket.io-client';
 import Chat from './chat.js';
 import Participants from './participants.js';
@@ -13,6 +13,7 @@ function Room({ location }) {
   const [newMsg, setNewMsg] = useState('');
   const [showChat, setShowChat] = useState(true);
   const [participants, setParticipants] = useState([]);
+  const [messageReceiver, setMessageReceiver] = useState('');
 
   const ENDPOINT = 'http://localhost:5000/';
   useEffect(() => {
@@ -62,6 +63,7 @@ function Room({ location }) {
     socket.emit(
       'sendMessage',
       {
+        receiver: messageReceiver,
         message: newMsg,
         time: new Date().getHours() + ':' + new Date().getMinutes(),
       },
@@ -71,6 +73,10 @@ function Room({ location }) {
 
   const showChatHandler = (showChatState) => {
     setShowChat(showChatState);
+  };
+
+  const handleSelectChange = (event) => {
+    setMessageReceiver(event.target.value);
   };
 
   return (
@@ -117,6 +123,22 @@ function Room({ location }) {
         {showChat === true ? (
           <>
             <Chat messages={messages} />
+            <Flex>
+              <Text ml="2"> To: </Text>
+              <Select
+                placeholder="Everyone"
+                w="40%"
+                mx="4"
+                mb="4%"
+                onChange={handleSelectChange}
+              >
+                {participants.map((participant) =>
+                  participant.id === socket.id ? null : (
+                    <option value={participant.id}>{participant.name}</option>
+                  )
+                )}
+              </Select>
+            </Flex>
             <Flex h="10%" mx="4">
               <Input
                 w="75%"
