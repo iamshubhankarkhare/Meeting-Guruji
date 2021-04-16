@@ -5,19 +5,30 @@ function Chat({ messages }) {
   return (
     <Flex h="80%" flexDirection="column">
       {messages.map((message, i) => (
-        <>
+        <Flex key={i} flexDirection="column">
           <Flex w="100%" justify="space-between">
-            <Text key={i} fontWeight="bold" mt="4" mx="4" color="gray.600">
+            <Text
+              fontWeight="bold"
+              mt="4"
+              mx="4"
+              color={`${message.user === 'Bot' ? 'gray.500' : ''}`}
+              as={`${message.user === 'Bot' ? 'i' : ''}`}
+            >
               {message.user}
             </Text>
-            <Text key={i} mt="4" mx="4" color="gray.400">
+            <Text mt="4" mx="4" color="gray.400">
               {message.time}
             </Text>
           </Flex>
-          <Text key={i} fontSize="md" mx="4">
+          <Text
+            fontSize="md"
+            mx="4"
+            color={`${message.user === 'Bot' ? 'gray.500' : ''}`}
+            as={`${message.user === 'Bot' ? 'i' : ''}`}
+          >
             {message.text}
           </Text>
-        </>
+        </Flex>
       ))}
     </Flex>
   );

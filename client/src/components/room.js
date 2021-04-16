@@ -1,20 +1,20 @@
-import React, { useState, useEffect } from "react";
-import queryString from "query-string";
-import { Text, Input, Flex, Button } from "@chakra-ui/react";
-import io from "socket.io-client";
-import Chat from "./chat.js";
-import Participants from "./participants.js";
+import React, { useState, useEffect } from 'react';
+import queryString from 'query-string';
+import { Text, Input, Flex, Button } from '@chakra-ui/react';
+import io from 'socket.io-client';
+import Chat from './chat.js';
+import Participants from './participants.js';
 
 let socket;
 function Room({ location }) {
-  const [name, setName] = useState("");
-  const [room, setRoom] = useState("");
+  const [name, setName] = useState('');
+  const [room, setRoom] = useState('');
   const [messages, setMessages] = useState([]);
-  const [newMsg, setNewMsg] = useState("");
+  const [newMsg, setNewMsg] = useState('');
   const [showChat, setShowChat] = useState(true);
   const [participants, setParticipants] = useState([]);
 
-  const ENDPOINT = "http://localhost:5000/";
+  const ENDPOINT = 'http://localhost:5000/';
   useEffect(() => {
     socket = io(ENDPOINT);
     const { name, room } = queryString.parse(location.search);
@@ -22,20 +22,20 @@ function Room({ location }) {
     setName(name);
     setRoom(room);
 
-    socket.emit("join", { name, room }, (error) => {
+    socket.emit('join', { name, room }, (error) => {
       console.log(error);
     });
   }, [ENDPOINT, location]);
 
   useEffect(() => {
-    socket.on("message", (message) => {
+    socket.on('message', (message) => {
       setMessages([...messages, message]);
     });
   }, [messages, name]);
 
   useEffect(() => {
-    socket.on("newParticipant", (users) => {
-      console.log("All users in the room: ", users);
+    socket.on('newParticipant', (users) => {
+      console.log('All users in the room: ', users);
 
       const comparator = (userA, userB) => {
         if (userA.name < userB.name) return -1;
@@ -53,19 +53,19 @@ function Room({ location }) {
       users = [currentUser[0], ...users];
       setParticipants(users);
     });
-  });
+  }, []);
 
   const handleChange = (event) => setNewMsg(event.target.value);
 
   const handleClick = () => {
     console.log(newMsg);
     socket.emit(
-      "sendMessage",
+      'sendMessage',
       {
         message: newMsg,
-        time: new Date().getHours() + ":" + new Date().getMinutes(),
+        time: new Date().getHours() + ':' + new Date().getMinutes(),
       },
-      () => setNewMsg("")
+      () => setNewMsg('')
     );
   };
 
@@ -111,7 +111,7 @@ function Room({ location }) {
             colorScheme="blue"
             onClick={() => showChatHandler(false)}
           >
-            {`Participants (${participants.length})`}  
+            {`Participants (${participants.length})`}
           </Button>
         </Flex>
         {showChat === true ? (
