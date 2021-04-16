@@ -92,10 +92,12 @@ function Room({ location }) {
         </Flex>
       </Flex>
       <Flex h="100%" w="25%" flexDirection="column">
-        <Flex h="10%" mx="4">
+        <Flex h="10%" mx="2">
           <Button
             size="md"
-            ml="4"
+            mt="2"
+            w="50%"
+            border="1px"
             colorScheme="blue"
             onClick={() => showChatHandler(true)}
           >
@@ -103,11 +105,13 @@ function Room({ location }) {
           </Button>
           <Button
             size="md"
-            ml="4"
+            mt="2"
+            w="50%"
+            border="1px"
             colorScheme="blue"
             onClick={() => showChatHandler(false)}
           >
-            Participants
+            {`Participants (${participants.length})`}  
           </Button>
         </Flex>
         {showChat === true ? (
