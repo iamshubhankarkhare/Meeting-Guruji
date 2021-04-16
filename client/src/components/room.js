@@ -47,7 +47,7 @@ function Room({ location }) {
         }
       };
       users.sort(comparator);
-      
+
       const currentUser = users.filter((user) => user.id === socket.id);
       users = users.filter((user) => user.id !== socket.id);
       users = [currentUser[0], ...users];
@@ -111,22 +111,24 @@ function Room({ location }) {
           </Button>
         </Flex>
         {showChat === true ? (
-          <Chat messages={messages} />
+          <>
+            <Chat messages={messages} />
+            <Flex h="10%" mx="4">
+              <Input
+                w="75%"
+                borderColor="blue.300"
+                placeholder="Type your msg here..."
+                value={newMsg}
+                onChange={handleChange}
+              ></Input>
+              <Button size="md" ml="4" colorScheme="blue" onClick={handleClick}>
+                Send
+              </Button>
+            </Flex>
+          </>
         ) : (
           <Participants participants={participants} />
         )}
-        <Flex h="10%" mx="4">
-          <Input
-            w="75%"
-            borderColor="blue.300"
-            placeholder="Type your msg here..."
-            value={newMsg}
-            onChange={handleChange}
-          ></Input>
-          <Button size="md" ml="4" colorScheme="blue" onClick={handleClick}>
-            Send
-          </Button>
-        </Flex>
       </Flex>
     </Flex>
   );
