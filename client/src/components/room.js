@@ -134,7 +134,11 @@ function Room({ location }) {
               >
                 {participants.map((participant) =>
                   participant.id === socket.id ? null : (
-                    <option value={participant.id}>{participant.name}</option>
+                    <option value={participant.id}>
+                      {participant.name.length > 30
+                        ? participant.name.substring(0, 27) + '...'
+                        : participant.name}
+                    </option>
                   )
                 )}
               </Select>
