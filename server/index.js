@@ -28,9 +28,8 @@ io.on("connection", (socket) => {
 
     socket.join(user.room);
 
-    io.emit(
+    io.to(room).emit(
       "newParticipant",
-      user.room,
       users.filter((userObj) => userObj.room === user.room)
     );
 

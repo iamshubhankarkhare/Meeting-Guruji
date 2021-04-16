@@ -34,9 +34,7 @@ function Room({ location }) {
   }, [messages, name]);
 
   useEffect(() => {
-    socket.on("newParticipant", (newParticpantsRoom, users) => {
-      if (room !== newParticpantsRoom) return;
-
+    socket.on("newParticipant", (users) => {
       console.log("All users in the room: ", users);
 
       const comparator = (userA, userB) => {
