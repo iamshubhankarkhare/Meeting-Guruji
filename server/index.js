@@ -30,12 +30,14 @@ io.on('connection', (socket) => {
 
     socket.emit('message', {
       user: 'Bot',
+      to: 'You',
       text: `Hey ${user.name}`,
       time: new Date().getHours() + ':' + new Date().getMinutes(),
     });
 
     socket.broadcast.to(user.room).emit('message', {
       user: 'Bot',
+      to: 'Everyone',
       text: `${user.name} just joined the room`,
       time: new Date().getHours() + ':' + new Date().getMinutes(),
     });
@@ -46,11 +48,34 @@ io.on('connection', (socket) => {
   socket.on('sendMessage', (data, callback) => {
     const user = getUser(socket.id);
     if (user) {
-      io.to(user.room).emit('message', {
-        user: user.name,
+      let messageObj = {
         text: data.message,
         time: data.time,
-      });
+      };
+      console.log('receiver on server: ', data.receiver);
+      if (data.receiver === '') {
+        messageObj.to = 'Everyone';
+        console.log('here', messageObj);
+        socket.to(user.room).emit('message', {
+          user: user.name,
+          ...messageObj,
+        });
+        socket.emit('message', {
+          user: 'You',
+          ...messageObj,
+        });
+      } else {
+        io.to(data.receiver).emit('message', {
+          user: user.name,
+          to: 'You',
+          ...messageObj,
+        });
+        socket.emit('message', {
+          user: 'You',
+          to: getUser(data.receiver).name,
+          ...messageObj,
+        });
+      }
     }
     callback();
   });
