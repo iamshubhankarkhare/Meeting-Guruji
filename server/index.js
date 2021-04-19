@@ -7,57 +7,87 @@ app.get('/', (req, res) => {
   res.send('hello');
 });
 
-var users = [];
-
-const getUser = (id) => users.find((user) => user.id === id);
+let sockets = {}; // socketId: { email, name, roomId, role }
+let rooms = {}; // roomId: [{ email, name, socketId, role },...]
 
 io.on('connection', (socket) => {
-  socket.on('getrooms', (data, callback) => {
+  socket.on('createRoom', ({ currentUser }, callback) => {
+    const socketObj = {
+      role: 'teacher',
+    };
+    sockets[socket.id] = socketObj;
     callback(uuidv4());
   });
 
-  socket.on('join', ({ name, room }, callback) => {
-    console.log(name, room);
-    const user = { id: socket.id, name: name, room: room };
-    users.push(user);
+  // user joins the room
+  socket.on('join', ({ currentUser, roomId }, callback) => {
+    console.log('in join');
+    console.log(currentUser.email, currentUser.displayName, roomId, socket.id);
 
-    socket.join(user.room);
+    // check if user created the room...
+    let role = null;
+    if (socket.id in sockets) role = 'teacher';
+    else role = 'student';
 
-    io.to(room).emit(
-      'newParticipant',
-      users.filter((userObj) => userObj.room === user.room)
+    sockets[socket.id] = {
+      email: currentUser.email,
+      name: currentUser.displayName,
+      roomId,
+      role,
+    };
+
+    const roomObj = {
+      email: currentUser.email,
+      name: currentUser.displayName,
+      socketId: socket.id,
+      role,
+    };
+
+    console.log(roomObj);
+
+    if (roomId in rooms) rooms[roomId].push(roomObj);
+    else {
+      rooms[roomId] = [roomObj];
+    }
+
+    socket.join(roomId);
+
+    io.to(roomId).emit(
+      'getParticipants',
+      rooms[roomId].filter((user) => user.socketId !== undefined)
     );
 
     socket.emit('message', {
       user: 'Bot',
       to: 'You',
-      text: `Hey ${user.name}`,
+      text: `Hey ${currentUser.displayName}`,
       time: new Date().getHours() + ':' + new Date().getMinutes(),
     });
 
-    socket.broadcast.to(user.room).emit('message', {
+    socket.broadcast.to(roomId).emit('message', {
       user: 'Bot',
       to: 'Everyone',
-      text: `${user.name} just joined the room`,
+      text: `${currentUser.displayName} just joined the room`,
       time: new Date().getHours() + ':' + new Date().getMinutes(),
     });
 
     callback();
   });
 
+  // a message is sent over chat
   socket.on('sendMessage', (data, callback) => {
-    const user = getUser(socket.id);
-    if (user) {
+    const socketUser = sockets[socket.id];
+    if (socketUser) {
       let messageObj = {
         text: data.message,
         time: data.time,
       };
-      console.log('receiver on server: ', data.receiver);
+
       if (data.receiver === '') {
+        // public message...
         messageObj.to = 'Everyone';
-        console.log('here', messageObj);
-        socket.to(user.room).emit('message', {
-          user: user.name,
+        socket.to(socketUser.roomId).emit('message', {
+          user: socketUser.name,
           ...messageObj,
         });
         socket.emit('message', {
@@ -65,14 +95,15 @@ io.on('connection', (socket) => {
           ...messageObj,
         });
       } else {
+        // private message...
         io.to(data.receiver).emit('message', {
-          user: user.name,
+          user: socketUser.name,
           to: 'You',
           ...messageObj,
         });
         socket.emit('message', {
           user: 'You',
-          to: getUser(data.receiver).name,
+          to: sockets[data.receiver].name,
           ...messageObj,
         });
       }
@@ -80,17 +111,32 @@ io.on('connection', (socket) => {
     callback();
   });
 
-  socket.on('disconnect', () => {
-    const index = users.findIndex((user) => user.id === socket.id);
-    if (users[index]) {
-      console.log(users[index]);
-      socket.broadcast.to(users[index].room).emit('message', {
+  // socket gets disconnected
+  socket.on('disconnect', (reason) => {
+    console.log(reason);
+    const socketUser = sockets[socket.id];
+    if (socketUser && 'email' in socketUser) {
+      console.log('in disconnect');
+      console.log(socketUser);
+
+      socket.broadcast.to(socketUser.roomId).emit('message', {
         user: 'Bot',
-        text: `${users[index].name} just left`,
+        to: 'Everyone',
+        text: `${socketUser.name} just left`,
         time: new Date().getHours() + ':' + new Date().getMinutes(),
       });
+
+      rooms[socketUser.roomId].forEach((user) => {
+        if (user.socketId === socket.id) delete user.socketId;
+      });
+
+      io.to(socketUser.roomId).emit(
+        'getParticipants',
+        rooms[socketUser.roomId].filter((user) => user.socketId !== undefined)
+      );
+
+      delete sockets[socket.id];
     }
-    users = users.filter((user) => user.id !== socket.id);
   });
 });
 
