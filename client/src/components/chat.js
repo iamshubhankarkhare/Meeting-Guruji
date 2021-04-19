@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Text, Input, Flex, Button } from '@chakra-ui/react';
+import React from 'react';
+import { Text, Flex } from '@chakra-ui/react';
 
 function Chat({ messages }) {
   return (

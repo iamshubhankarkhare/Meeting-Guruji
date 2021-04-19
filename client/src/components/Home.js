@@ -5,9 +5,9 @@ import Header from './Header';
 import Signup from './Signup';
 import Signin from './Signin';
 import { useAuth } from '../contexts/AuthContext';
-import Join from './Join';
+import Create from './Create';
 
-function Home() {
+const Home = () => {
   const [showSignup, setShowSignup] = useState(true);
 
   const showSignupHandler = (show) => {
@@ -28,7 +28,7 @@ function Home() {
             <Text color="gray.600" fontSize="2xl" fontWeight="bold">
               For students. By students!
             </Text>
-            {currentUser ? <Join /> : null}
+            {currentUser ? <Create /> : null}
           </Stack>
         </Flex>
         {!currentUser ? (
@@ -45,6 +45,6 @@ function Home() {
       </Flex>
     </>
   );
-}
+};
 
 export default Home;
