@@ -6,6 +6,7 @@ import Signup from './Signup';
 import Signin from './Signin';
 import { useAuth } from '../contexts/AuthContext';
 import Create from './Create';
+import Join from './Join';
 
 const Home = () => {
   const [showSignup, setShowSignup] = useState(true);
@@ -29,6 +30,7 @@ const Home = () => {
               For students. By students!
             </Text>
             {currentUser ? <Create /> : null}
+            {currentUser ? <Join /> : null}
           </Stack>
         </Flex>
         {!currentUser ? (

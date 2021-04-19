@@ -11,34 +11,44 @@ let sockets = {}; // socketId: { email, name, roomId, role }
 let rooms = {}; // roomId: [{ email, name, socketId, role },...]
 
 io.on('connection', (socket) => {
-  socket.on('getrooms', (data, callback) => {
+  socket.on('createRoom', ({ currentUser }, callback) => {
+    const socketObj = {
+      role: 'teacher',
+    };
+    sockets[socket.id] = socketObj;
     callback(uuidv4());
   });
 
   // user joins the room
   socket.on('join', ({ currentUser, roomId }, callback) => {
+    console.log('in join');
     console.log(currentUser.email, currentUser.displayName, roomId, socket.id);
+
+    // check if user created the room...
+    let role = null;
+    if (socket.id in sockets) role = 'teacher';
+    else role = 'student';
+
+    sockets[socket.id] = {
+      email: currentUser.email,
+      name: currentUser.displayName,
+      roomId,
+      role,
+    };
 
     const roomObj = {
       email: currentUser.email,
       name: currentUser.displayName,
       socketId: socket.id,
-      role: 'student',
+      role,
     };
+
+    console.log(roomObj);
 
     if (roomId in rooms) rooms[roomId].push(roomObj);
     else {
       rooms[roomId] = [roomObj];
     }
-
-    const socketObj = {
-      email: currentUser.email,
-      name: currentUser.displayName,
-      roomId,
-      role: 'student',
-    };
-
-    sockets[socket.id] = socketObj;
 
     socket.join(roomId);
 
@@ -102,9 +112,13 @@ io.on('connection', (socket) => {
   });
 
   // socket gets disconnected
-  socket.on('disconnect', () => {
+  socket.on('disconnect', (reason) => {
+    console.log(reason);
     const socketUser = sockets[socket.id];
-    if (socketUser) {
+    if (socketUser && 'email' in socketUser) {
+      console.log('in disconnect');
+      console.log(socketUser);
+
       socket.broadcast.to(socketUser.roomId).emit('message', {
         user: 'Bot',
         to: 'Everyone',
@@ -112,7 +126,7 @@ io.on('connection', (socket) => {
         time: new Date().getHours() + ':' + new Date().getMinutes(),
       });
 
-      rooms[socketUser.roomId].map((user) => {
+      rooms[socketUser.roomId].forEach((user) => {
         if (user.socketId === socket.id) delete user.socketId;
       });
 
