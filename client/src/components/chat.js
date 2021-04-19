@@ -1,7 +1,7 @@
 import React from 'react';
 import { Text, Flex } from '@chakra-ui/react';
 
-function Chat({ messages }) {
+const Chat = ({ messages }) => {
   return (
     <Flex h="80%" flexDirection="column">
       {messages.map((message, i) => (
@@ -32,6 +32,6 @@ function Chat({ messages }) {
       ))}
     </Flex>
   );
-}
+};
 
 export default Chat;
