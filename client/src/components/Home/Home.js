@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { Text, Flex, Center, Stack } from '@chakra-ui/react';
 
 import Header from './Header';
-import Signup from './Signup';
-import Signin from './Signin';
-import { useAuth } from '../contexts/AuthContext';
+import Signup from '../Authentication/Signup';
+import Signin from '../Authentication/Signin';
+import { useAuth } from '../../contexts/AuthContext';
 import Create from './Create';
 import Join from './Join';
 

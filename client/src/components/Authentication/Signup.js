@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext';
 import {
   Button,
   FormControl,
@@ -10,16 +10,22 @@ import {
   Stack,
 } from '@chakra-ui/react';
 
-const Login = (props) => {
+const SignUp = (props) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
 
-  const { login, googleLogin } = useAuth();
+  const { signup, googleLogin } = useAuth();
 
-  const handleSignIn = async (event) => {
+  const handleSignUp = async (event) => {
     event.preventDefault();
     try {
-      await login(email, password);
+      const userCredential = await signup(email, password);
+      const user = userCredential.user;
+      await user.updateProfile({
+        displayName: name,
+      });
+      window.location.assign('/');
     } catch (err) {
       alert(err.message);
     }
@@ -35,8 +41,12 @@ const Login = (props) => {
 
   return (
     <div>
-      <Heading>Sign-in</Heading>
-      <form onSubmit={(e) => handleSignIn(e)}>
+      <Heading>Sign-up</Heading>
+      <form
+        onSubmit={async (e) => {
+          await handleSignUp(e);
+        }}
+      >
         <FormControl mt={4} isRequired>
           <FormLabel>Email address</FormLabel>
           <Input
@@ -45,6 +55,15 @@ const Login = (props) => {
             placeholder="Enter email address"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+          />
+        </FormControl>
+        <FormControl mt={4} isRequired>
+          <FormLabel>Name</FormLabel>
+          <Input
+            size="md"
+            placeholder="Enter Name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
           />
         </FormControl>
         <FormControl mt={4} isRequired>
@@ -60,7 +79,7 @@ const Login = (props) => {
         <br />
         <Stack>
           <Button type="submit" colorScheme="blue">
-            Sign In
+            Sign Up
           </Button>
           <Button onClick={() => handleGoogleLogin()}>
             <img
@@ -77,11 +96,11 @@ const Login = (props) => {
         </Stack>
       </form>
       <br />
-      <Link onClick={() => props.showSignupHandler(true)} color="blue.400">
-        Don't have an account? Sign-up
+      <Link onClick={() => props.showSignupHandler(false)} color="blue.400">
+        Already have an account? Sign-in
       </Link>
     </div>
   );
 };
 
-export default Login;
+export default SignUp;

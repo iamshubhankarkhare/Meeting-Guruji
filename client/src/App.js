@@ -1,10 +1,10 @@
 import React from 'react';
 import { BrowserRouter as Router, Route } from 'react-router-dom';
 
-import Home from './components/Home';
-import Room from './components/Room';
+import Home from './components/Home/Home';
+import Room from './components/Room/Room';
 import { AuthProvider } from './contexts/AuthContext';
-import PrivateRoute from './components/PrivateRoute';
+import PrivateRoute from './components/Routes/PrivateRoute';
 
 function App() {
   return (

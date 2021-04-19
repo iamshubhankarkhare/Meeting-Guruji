@@ -3,7 +3,7 @@ import { Text, Input, Flex, Button, Select } from '@chakra-ui/react';
 import io from 'socket.io-client';
 import Chat from './Chat.js';
 import Participants from './Participants.js';
-import { useAuth } from '../contexts/AuthContext.js';
+import { useAuth } from '../../contexts/AuthContext.js';
 
 let socket;
 const Room = ({ location }) => {

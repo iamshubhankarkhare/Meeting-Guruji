@@ -1,6 +1,6 @@
 import { React } from 'react';
 import { Box, Flex, Button, Text, HStack } from '@chakra-ui/react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext';
 
 const Header = (props) => {
   const { currentUser, logout } = useAuth();
