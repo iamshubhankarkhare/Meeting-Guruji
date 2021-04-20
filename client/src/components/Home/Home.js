@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Tabs,
   TabList,
@@ -31,12 +31,7 @@ function GoogleIcon() {
 }
 
 const Home = () => {
-  const [showSignup, setShowSignup] = useState(true);
   const { isOpen, onOpen, onClose } = useDisclosure();
-
-  const showSignupHandler = (show) => {
-    setShowSignup(show);
-  };
 
   const handleGoogleLogin = async () => {
     onClose();
@@ -51,7 +46,7 @@ const Home = () => {
 
   return (
     <>
-      <Header showSignupHandler={showSignupHandler} />
+      <Header />
       <Flex w="100%" h="92%">
         <Flex w="50%" mx="20" justify="center" flexDirection="column">
           <Stack spacing="24px" justify="center">
@@ -91,10 +86,10 @@ const Home = () => {
               <ModalBody>
                 <TabPanels>
                   <TabPanel>
-                    <Signin showSignupHandler={showSignupHandler} />
+                    <Signin onClose={onClose} />
                   </TabPanel>
                   <TabPanel>
-                    <Signup showSignupHandler={showSignupHandler} />
+                    <Signup onClose={onClose} />
                   </TabPanel>
                 </TabPanels>
                 <Flex justify="center" my="4">

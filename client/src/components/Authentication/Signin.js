@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { Button, FormControl, FormLabel, Input, Stack } from '@chakra-ui/react';
 
-const Login = (props) => {
+const Signin = ({ onClose }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
@@ -10,6 +10,7 @@ const Login = (props) => {
 
   const handleSignIn = async (event) => {
     event.preventDefault();
+    onClose();
     try {
       await login(email, password);
     } catch (err) {
@@ -51,4 +52,4 @@ const Login = (props) => {
   );
 };
 
-export default Login;
+export default Signin;

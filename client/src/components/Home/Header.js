@@ -2,13 +2,12 @@ import { React } from 'react';
 import { Box, Flex, Button, Text, HStack } from '@chakra-ui/react';
 import { useAuth } from '../../contexts/AuthContext';
 
-const Header = ({ showSignupHandler }) => {
+const Header = () => {
   const { currentUser, logout } = useAuth();
 
   const handleLogout = async () => {
     try {
       await logout();
-      showSignupHandler(true);
     } catch (err) {
       alert(err.message);
     }

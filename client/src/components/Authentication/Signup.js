@@ -2,15 +2,16 @@ import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { Button, FormControl, FormLabel, Input, Stack } from '@chakra-ui/react';
 
-const SignUp = (props) => {
+const SignUp = ({ onClose }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
 
-  const { signup, googleLogin } = useAuth();
+  const { signup } = useAuth();
 
   const handleSignUp = async (event) => {
     event.preventDefault();
+    onClose();
     try {
       const userCredential = await signup(email, password);
       const user = userCredential.user;
