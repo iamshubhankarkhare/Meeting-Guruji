@@ -30,7 +30,7 @@ const Chat = ({ messages }) => {
           </Text>
         </Flex>
       ))}
-      <div ref={messagesEndRef} />
+     
     </Flex>
   );
 };

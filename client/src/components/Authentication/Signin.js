@@ -1,20 +1,12 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import {
-  Button,
-  FormControl,
-  FormLabel,
-  Heading,
-  Input,
-  Link,
-  Stack,
-} from '@chakra-ui/react';
+import { Button, FormControl, FormLabel, Input, Stack } from '@chakra-ui/react';
 
 const Login = (props) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const { login, googleLogin } = useAuth();
+  const { login } = useAuth();
 
   const handleSignIn = async (event) => {
     event.preventDefault();
@@ -25,17 +17,8 @@ const Login = (props) => {
     }
   };
 
-  const handleGoogleLogin = async () => {
-    try {
-      await googleLogin();
-    } catch (err) {
-      alert(err.message);
-    }
-  };
-
   return (
     <div>
-      <Heading>Sign-in</Heading>
       <form onSubmit={(e) => handleSignIn(e)}>
         <FormControl mt={4} isRequired>
           <FormLabel>Email address</FormLabel>
@@ -62,24 +45,8 @@ const Login = (props) => {
           <Button type="submit" colorScheme="blue">
             Sign In
           </Button>
-          <Button onClick={() => handleGoogleLogin()}>
-            <img
-              src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg"
-              alt="Google logo"
-              width="16px"
-              height="16px"
-              padding="0"
-              margin="0 5px"
-              vertical-align="middle"
-            />
-            Login With Google
-          </Button>
         </Stack>
       </form>
-      <br />
-      <Link onClick={() => props.showSignupHandler(true)} color="blue.400">
-        Don't have an account? Sign-up
-      </Link>
     </div>
   );
 };
