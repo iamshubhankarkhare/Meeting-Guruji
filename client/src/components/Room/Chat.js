@@ -1,15 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Text, Input, Flex, Button } from '@chakra-ui/react';
+import React from 'react';
+import { Text, Flex } from '@chakra-ui/react';
 
-function Chat({ messages }) {
-  const messagesEndRef = useRef(null);
-  const scrollToBottom = () => {
-    messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-  };
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
+const Chat = ({ messages }) => {
   return (
     <Flex h="80%" flexDirection="column">
       {messages.map((message, i) => (
@@ -22,7 +14,7 @@ function Chat({ messages }) {
               color={`${message.user === 'Bot' ? 'gray.500' : ''}`}
               as={`${message.user === 'Bot' ? 'i' : ''}`}
             >
-              {message.user}
+              {`${message.user} to ${message.to}`}
             </Text>
             <Text mt="4" mx="4" color="gray.400">
               {message.time}
@@ -41,6 +33,6 @@ function Chat({ messages }) {
       <div ref={messagesEndRef} />
     </Flex>
   );
-}
+};
 
 export default Chat;

@@ -1,15 +1,19 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Route } from 'react-router-dom';
-import { Box } from '@chakra-ui/react';
-import Join from './components/join.js';
-import Room from './components/room.js';
+
+import Home from './components/Home/Home';
+import Room from './components/Room/Room';
+import { AuthProvider } from './contexts/AuthContext';
+import PrivateRoute from './components/Routes/PrivateRoute';
 
 function App() {
   return (
-    <Router>
-      <Route path="/" exact component={Join} />
-      <Route path="/room" component={Room} />
-    </Router>
+    <AuthProvider>
+      <Router>
+        <Route path="/" exact component={Home} />
+        <PrivateRoute path="/room" component={Room} />
+      </Router>
+    </AuthProvider>
   );
 }
 

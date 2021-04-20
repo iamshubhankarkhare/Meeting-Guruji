@@ -1,56 +1,55 @@
 import React, { useState, useEffect } from 'react';
-import queryString from 'query-string';
-import { Text, Input, Flex, Button } from '@chakra-ui/react';
+import { Text, Input, Flex, Button, Select } from '@chakra-ui/react';
 import io from 'socket.io-client';
-import Chat from './chat.js';
-import Participants from './participants.js';
+import Chat from './Chat.js';
+import Participants from './Participants.js';
+import { useAuth } from '../../contexts/AuthContext.js';
 
 let socket;
-function Room({ location }) {
-  const [name, setName] = useState('');
-  const [room, setRoom] = useState('');
+const Room = ({ location }) => {
   const [messages, setMessages] = useState([]);
   const [newMsg, setNewMsg] = useState('');
   const [showChat, setShowChat] = useState(true);
   const [participants, setParticipants] = useState([]);
+  const [messageReceiver, setMessageReceiver] = useState('');
+
+  const { currentUser } = useAuth();
 
   const ENDPOINT = 'http://localhost:5000/';
   useEffect(() => {
     socket = io(ENDPOINT);
-    const { name, room } = queryString.parse(location.search);
-    console.log(name, room);
-    setName(name);
-    setRoom(room);
+    const url = window.location.href;
+    const roomId = url.substring(url.lastIndexOf('/') + 1, url.length);
 
-    socket.emit('join', { name, room }, (error) => {
+    socket.emit('join', { currentUser, roomId }, (error) => {
       console.log(error);
     });
-  }, [ENDPOINT, location]);
+  }, [ENDPOINT, location, currentUser]);
 
   useEffect(() => {
     socket.on('message', (message) => {
       setMessages([...messages, message]);
     });
-  }, [messages, name]);
+  }, [messages]);
 
   useEffect(() => {
-    socket.on('newParticipant', (users) => {
+    socket.on('getParticipants', (users) => {
       console.log('All users in the room: ', users);
 
       const comparator = (userA, userB) => {
         if (userA.name < userB.name) return -1;
         else if (userA.name > userB.name) return 1;
         else {
-          if (userA.id < userB.id) return -1;
-          else if (userA.id > userB.id) return 1;
+          if (userA.email < userB.email) return -1;
+          else if (userA.email > userB.email) return 1;
           else return 0;
         }
       };
       users.sort(comparator);
 
-      const currentUser = users.filter((user) => user.id === socket.id);
-      users = users.filter((user) => user.id !== socket.id);
-      users = [currentUser[0], ...users];
+      const currentUser = users.find((user) => user.socketId === socket.id);
+      users = users.filter((user) => user.socketId !== socket.id);
+      users = [currentUser, ...users];
       setParticipants(users);
     });
   }, []);
@@ -62,6 +61,7 @@ function Room({ location }) {
     socket.emit(
       'sendMessage',
       {
+        receiver: messageReceiver,
         message: newMsg,
         time: new Date().getHours() + ':' + new Date().getMinutes(),
       },
@@ -71,6 +71,10 @@ function Room({ location }) {
 
   const showChatHandler = (showChatState) => {
     setShowChat(showChatState);
+  };
+
+  const handleSelectChange = (event) => {
+    setMessageReceiver(event.target.value);
   };
 
   return (
@@ -117,6 +121,26 @@ function Room({ location }) {
         {showChat === true ? (
           <>
             <Chat messages={messages} />
+            <Flex>
+              <Text ml="2"> To: </Text>
+              <Select
+                placeholder="Everyone"
+                w="40%"
+                mx="4"
+                mb="4%"
+                onChange={handleSelectChange}
+              >
+                {participants.map((participant) =>
+                  participant.socketId === socket.id ? null : (
+                    <option value={participant.socketId}>
+                      {participant.name.length > 30
+                        ? participant.name.substring(0, 27) + '...'
+                        : participant.name}
+                    </option>
+                  )
+                )}
+              </Select>
+            </Flex>
             <Flex h="10%" mx="4">
               <Input
                 w="75%"
@@ -136,6 +160,6 @@ function Room({ location }) {
       </Flex>
     </Flex>
   );
-}
+};
 
 export default Room;
