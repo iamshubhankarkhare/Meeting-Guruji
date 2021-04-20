@@ -1,2 +1,3 @@
 # Meeting-Guruji
-A video conferencing app built for students, by the students.
+
+A video conferencing app built for students, by the students. 
