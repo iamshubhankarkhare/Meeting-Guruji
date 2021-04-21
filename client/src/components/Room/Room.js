@@ -7,11 +7,8 @@ import { useAuth } from '../../contexts/AuthContext.js';
 
 let socket;
 const Room = ({ location }) => {
-  const [messages, setMessages] = useState([]);
-  const [newMsg, setNewMsg] = useState('');
   const [showChat, setShowChat] = useState(true);
   const [participants, setParticipants] = useState([]);
-  const [messageReceiver, setMessageReceiver] = useState('');
 
   const { currentUser } = useAuth();
 
@@ -25,12 +22,6 @@ const Room = ({ location }) => {
       console.log(error);
     });
   }, [ENDPOINT, location, currentUser]);
-
-  useEffect(() => {
-    socket.on('message', (message) => {
-      setMessages([...messages, message]);
-    });
-  }, [messages]);
 
   useEffect(() => {
     socket.on('getParticipants', (users) => {
@@ -54,29 +45,9 @@ const Room = ({ location }) => {
     });
   }, []);
 
-  const handleChange = (event) => setNewMsg(event.target.value);
-
-  const handleClick = () => {
-    console.log(newMsg);
-    socket.emit(
-      'sendMessage',
-      {
-        receiver: messageReceiver,
-        message: newMsg,
-        time: new Date().getHours() + ':' + new Date().getMinutes(),
-      },
-      () => setNewMsg('')
-    );
-  };
-
   const showChatHandler = (showChatState) => {
     setShowChat(showChatState);
   };
-
-  const handleSelectChange = (event) => {
-    setMessageReceiver(event.target.value);
-  };
-
   return (
     <Flex h="100%">
       <Flex bg="blue.200" h="100%" w="75%" flexDirection="column">
@@ -120,39 +91,7 @@ const Room = ({ location }) => {
         </Flex>
         {showChat === true ? (
           <>
-            <Chat messages={messages} />
-            <Flex>
-              <Text ml="2"> To: </Text>
-              <Select
-                placeholder="Everyone"
-                w="40%"
-                mx="4"
-                mb="4%"
-                onChange={handleSelectChange}
-              >
-                {participants.map((participant) =>
-                  participant.socketId === socket.id ? null : (
-                    <option value={participant.socketId}>
-                      {participant.name.length > 30
-                        ? participant.name.substring(0, 27) + '...'
-                        : participant.name}
-                    </option>
-                  )
-                )}
-              </Select>
-            </Flex>
-            <Flex h="10%" mx="4">
-              <Input
-                w="75%"
-                borderColor="blue.300"
-                placeholder="Type your msg here..."
-                value={newMsg}
-                onChange={handleChange}
-              ></Input>
-              <Button size="md" ml="4" colorScheme="blue" onClick={handleClick}>
-                Send
-              </Button>
-            </Flex>
+            <Chat participants={participants} socket={socket} />
           </>
         ) : (
           <Participants participants={participants} />

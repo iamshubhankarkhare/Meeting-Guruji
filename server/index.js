@@ -75,8 +75,9 @@ io.on('connection', (socket) => {
   });
 
   // a message is sent over chat
-  socket.on('sendMessage', (data, callback) => {
+  socket.on('sendMessage', (data) => {
     const socketUser = sockets[socket.id];
+    console.log(data);
     if (socketUser) {
       let messageObj = {
         text: data.message,
@@ -108,7 +109,6 @@ io.on('connection', (socket) => {
         });
       }
     }
-    callback();
   });
 
   // socket gets disconnected
