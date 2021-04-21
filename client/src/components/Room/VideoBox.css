@@ -1,0 +1,11 @@
+#video-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 100px);
+  grid-auto-rows: 100px;
+}
+
+video {
+  width: 40%;
+  height: 40%;
+  object-fit: cover;
+}

@@ -1,36 +1,40 @@
 import React, { useState, useEffect } from 'react';
 import { Text, Input, Flex, Button, Select } from '@chakra-ui/react';
 import io from 'socket.io-client';
-import Chat from './Chat.js';
-import Participants from './Participants.js';
-import { useAuth } from '../../contexts/AuthContext.js';
+import Chat from './Chat';
+import Participants from './Participants';
+import VideoTest from './VideoTest';
+import { useAuth } from '../../contexts/AuthContext';
 
-let socket;
 const Room = ({ location }) => {
   const [messages, setMessages] = useState([]);
   const [newMsg, setNewMsg] = useState('');
   const [showChat, setShowChat] = useState(true);
   const [participants, setParticipants] = useState([]);
   const [messageReceiver, setMessageReceiver] = useState('');
+  const ENDPOINT = 'http://localhost:5000/';
+  const [socket, setSocket] = useState(
+    io(ENDPOINT, {
+      pingTimeout: 30000,
+    })
+  );
 
   const { currentUser } = useAuth();
 
-  const ENDPOINT = 'http://localhost:5000/';
   useEffect(() => {
-    socket = io(ENDPOINT);
     const url = window.location.href;
     const roomId = url.substring(url.lastIndexOf('/') + 1, url.length);
 
     socket.emit('join', { currentUser, roomId }, (error) => {
       console.log(error);
     });
-  }, [ENDPOINT, location, currentUser]);
+  }, [ENDPOINT, location, currentUser, socket]);
 
   useEffect(() => {
     socket.on('message', (message) => {
       setMessages([...messages, message]);
     });
-  }, [messages]);
+  }, [messages, socket]);
 
   useEffect(() => {
     socket.on('getParticipants', (users) => {
@@ -52,7 +56,7 @@ const Room = ({ location }) => {
       users = [currentUser, ...users];
       setParticipants(users);
     });
-  }, []);
+  }, [socket]);
 
   const handleChange = (event) => setNewMsg(event.target.value);
 
@@ -81,7 +85,8 @@ const Room = ({ location }) => {
     <Flex h="100%">
       <Flex bg="blue.200" h="100%" w="75%" flexDirection="column">
         <Flex h="90%" justify="center" align="center">
-          Video boxes
+          {/* Video Box */}
+          <VideoTest socket={socket} />
         </Flex>
         <Flex justify="center" h="10%" align="center" bg="white">
           <Text mx="6" size="md">
