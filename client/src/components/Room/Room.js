@@ -4,6 +4,7 @@ import io from 'socket.io-client';
 import Chat from './Chat.js';
 import Participants from './Participants.js';
 import { useAuth } from '../../contexts/AuthContext.js';
+import VideoTest from './VideoTest';
 
 let socket;
 const Room = ({ location }) => {
@@ -52,7 +53,7 @@ const Room = ({ location }) => {
     <Flex h="100%">
       <Flex bg="blue.200" h="100%" w="75%" flexDirection="column">
         <Flex h="90%" justify="center" align="center">
-          Video boxes
+          <VideoTest socket={socket} />
         </Flex>
         <Flex justify="center" h="10%" align="center" bg="white">
           <Text mx="6" size="md">

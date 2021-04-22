@@ -9,6 +9,7 @@ app.get('/', (req, res) => {
 
 let sockets = {}; // socketId: { email, name, roomId, role }
 let rooms = {}; // roomId: [{ email, name, socketId, role },...]
+let peers = {}; // roomId: [peerId,...]
 
 io.on('connection', (socket) => {
   socket.on('createRoom', ({ currentUser }, callback) => {
@@ -137,6 +138,22 @@ io.on('connection', (socket) => {
 
       delete sockets[socket.id];
     }
+  });
+  // for peer
+  socket.on('peer-join', (peerId) => {
+    const roomId = sockets[socket.id].roomId;
+
+    if (roomId in peers) peers[roomId].push(peerId);
+    else peers[roomId] = [peerId];
+
+    socket.broadcast.to(roomId).emit('user-connected', peerId);
+
+    socket.emit('getPeers', peers[roomId]);
+
+    socket.on('disconnect', () => {
+      peers[roomId].splice(peers[roomId].indexOf(peerId), 1);
+      socket.broadcast.to(roomId).emit('user-disconnected', peerId);
+    });
   });
 });
 
