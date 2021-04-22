@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Text, Input, Flex, Button, Select } from '@chakra-ui/react';
+import { useParams } from 'react-router';
+import { Text, Flex, Button } from '@chakra-ui/react';
 import io from 'socket.io-client';
 import Chat from './Chat.js';
 import Participants from './Participants.js';
@@ -7,9 +8,11 @@ import { useAuth } from '../../contexts/AuthContext.js';
 import VideoTest from './VideoTest';
 
 let socket;
-const Room = ({ location }) => {
+const Room = () => {
   const [showChat, setShowChat] = useState(true);
   const [participants, setParticipants] = useState([]);
+
+  const { id } = useParams();
 
   const { currentUser } = useAuth();
   console.log('called room');
@@ -17,8 +20,7 @@ const Room = ({ location }) => {
   const ENDPOINT = 'http://localhost:5000/';
   useEffect(() => {
     socket = io(ENDPOINT);
-    const url = window.location.href;
-    const roomId = url.substring(url.lastIndexOf('/') + 1, url.length);
+    const roomId = id;
 
     socket.emit('join', { currentUser, roomId }, (error) => {
       console.log(error);
@@ -42,7 +44,7 @@ const Room = ({ location }) => {
       users = [currentUser, ...users];
       setParticipants(users);
     });
-  }, [ENDPOINT, location, currentUser]);
+  }, [ENDPOINT, currentUser, id]);
 
   const showChatHandler = (showChatState) => {
     setShowChat(showChatState);

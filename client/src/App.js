@@ -11,7 +11,7 @@ function App() {
     <AuthProvider>
       <Router>
         <Route path="/" exact component={Home} />
-        <PrivateRoute path="/room" component={Room} />
+        <PrivateRoute path="/room/:id" component={Room} />
       </Router>
     </AuthProvider>
   );
