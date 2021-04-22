@@ -12,6 +12,7 @@ const Room = ({ location }) => {
   const [participants, setParticipants] = useState([]);
 
   const { currentUser } = useAuth();
+  console.log('called room');
 
   const ENDPOINT = 'http://localhost:5000/';
   useEffect(() => {
@@ -22,9 +23,6 @@ const Room = ({ location }) => {
     socket.emit('join', { currentUser, roomId }, (error) => {
       console.log(error);
     });
-  }, [ENDPOINT, location, currentUser]);
-
-  useEffect(() => {
     socket.on('getParticipants', (users) => {
       console.log('All users in the room: ', users);
 
@@ -44,16 +42,16 @@ const Room = ({ location }) => {
       users = [currentUser, ...users];
       setParticipants(users);
     });
-  }, []);
+  }, [ENDPOINT, location, currentUser]);
 
   const showChatHandler = (showChatState) => {
     setShowChat(showChatState);
   };
   return (
     <Flex h="100%">
-      <Flex bg="blue.200" h="100%" w="75%" flexDirection="column">
+      <Flex bg="gray.800" h="100%" w="75%" flexDirection="column">
         <Flex h="90%" justify="center" align="center">
-          <VideoTest socket={socket} />
+          {socket && <VideoTest socket={socket} />}
         </Flex>
         <Flex justify="center" h="10%" align="center" bg="white">
           <Text mx="6" size="md">
@@ -91,9 +89,7 @@ const Room = ({ location }) => {
           </Button>
         </Flex>
         {showChat === true ? (
-          <>
-            <Chat participants={participants} socket={socket} />
-          </>
+          <>{socket && <Chat participants={participants} socket={socket} />}</>
         ) : (
           <Participants participants={participants} />
         )}

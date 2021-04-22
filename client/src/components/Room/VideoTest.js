@@ -1,15 +1,16 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import ReactDOM from 'react-dom';
+import { SimpleGrid } from '@chakra-ui/react';
 import Peer from 'peerjs';
 
 import './VideoTest.css';
 
-const VideoBox = ({ socket }) => {
+let peers = {};
+const VideoBox = React.memo(({ socket }) => {
   const videoGrid = useRef(null);
   console.log('called');
 
   useEffect(() => {
-    let peers = {};
     const peer = new Peer();
     const myVideo = document.createElement('video');
 
@@ -27,33 +28,28 @@ const VideoBox = ({ socket }) => {
         });
 
         // participants already in the room
-        socket &&
-          socket.on('getPeers', (peerIds) => {
-            peerIds.forEach((peerId) => {
-              if (peerId !== peer.id) connectToNewUser(peerId, myStream);
-            });
+        socket.on('getPeers', (peerIds) => {
+          peerIds.forEach((peerId) => {
+            if (peerId !== peer.id) connectToNewUser(peerId, myStream);
           });
+        });
 
         // new user in the room
-        socket &&
-          socket.on('user-connected', (peerId) => {
-            console.log('new user:', peerId);
-            connectToNewUser(peerId, myStream);
-          });
+        socket.on('user-connected', (peerId) => {
+          console.log('new user:', peerId);
+          connectToNewUser(peerId, myStream);
+        });
       });
 
-    socket &&
-      peer.on('open', (id) => {
-        socket.emit('peer-join', id);
-      });
+    peer.on('open', (id) => {
+      socket.emit('peer-join', id);
+    });
 
-    socket &&
-      socket.on('user-disconnected', (peerId) => {
-        if (peers[peerId]) {
-          // console.log(peer.id, 'closed', peerId);
-          peers[peerId].close();
-        }
-      });
+    socket.on('user-disconnected', (peerId) => {
+      if (peers[peerId]) {
+        peers[peerId].close();
+      }
+    });
 
     // call another peer
     function connectToNewUser(peerId, stream) {
@@ -83,7 +79,19 @@ const VideoBox = ({ socket }) => {
     }
   }, [videoGrid, socket]);
 
-  return <div ref={videoGrid}></div>;
-};
+  return (
+    <SimpleGrid
+      h="100%"
+      spacing={0}
+      w="100%"
+      objectFit="cover"
+      verticalAlign="middle"
+      justifyItems="center"
+      alignContent="center"
+      minChildWidth="480px"
+      ref={videoGrid}
+    ></SimpleGrid>
+  );
+});
 
 export default VideoBox;
