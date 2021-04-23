@@ -4,11 +4,19 @@ import { useHistory } from 'react-router-dom';
 
 function Join() {
   const [roomId, setRoomId] = React.useState('');
+
   const handleChange = (event) => setRoomId(event.target.value);
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      console.log('enter');
+      handleClick();
+    }
+  };
+
   const history = useHistory();
   const handleClick = () => {
     const ar = roomId.split('/');
-    console.log(ar);
     history.push(`/${ar[ar.length - 1]}`);
   };
 
@@ -21,15 +29,16 @@ function Join() {
           value={roomId}
           size="lg"
           w="sm"
+          onKeyDown={(e) => handleKeyDown(e)}
           borderColor="blue.200"
-          onChange={handleChange}
+          onChange={(e) => handleChange(e)}
         />
         <Button
           my="2"
           mx="4"
           size="lg"
           colorScheme="blue"
-          onClick={handleClick}
+          onClick={() => handleClick()}
         >
           Join
         </Button>
