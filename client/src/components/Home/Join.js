@@ -1,12 +1,15 @@
 import React from 'react';
 import { Input, Flex, Button } from '@chakra-ui/react';
+import { useHistory } from 'react-router-dom';
 
 function Join() {
   const [roomId, setRoomId] = React.useState('');
   const handleChange = (event) => setRoomId(event.target.value);
-
+  const history = useHistory();
   const handleClick = () => {
-    window.location.replace(`/room/${roomId}`);
+    const ar = roomId.split('/');
+    console.log(ar);
+    history.push(`/${ar[ar.length - 1]}`);
   };
 
   return (

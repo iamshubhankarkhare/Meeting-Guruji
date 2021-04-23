@@ -6,6 +6,7 @@ import Chat from './Chat.js';
 import Participants from './Participants.js';
 import { useAuth } from '../../contexts/AuthContext.js';
 import VideoTest from './VideoTest';
+import ClipBoard from './ClipBoard';
 
 let socket;
 const Room = () => {
@@ -13,21 +14,21 @@ const Room = () => {
   const [participants, setParticipants] = useState([]);
 
   const { id } = useParams();
+  console.log(id);
+  const isTeacher = window.location.hash == '#init' ? true : false;
+  const url = `${window.location.origin}/${id}`;
+  console.log(isTeacher);
 
   const { currentUser } = useAuth();
-  console.log('called room');
 
   const ENDPOINT = 'http://localhost:5000/';
   useEffect(() => {
     socket = io(ENDPOINT);
     const roomId = id;
-
     socket.emit('join', { currentUser, roomId }, (error) => {
       console.log(error);
     });
     socket.on('getParticipants', (users) => {
-      console.log('All users in the room: ', users);
-
       const comparator = (userA, userB) => {
         if (userA.name < userB.name) return -1;
         else if (userA.name > userB.name) return 1;
@@ -51,6 +52,7 @@ const Room = () => {
   };
   return (
     <Flex h="100%">
+      {isTeacher && <ClipBoard url={url} currentUser={currentUser} />}
       <Flex bg="gray.800" h="100%" w="75%" flexDirection="column">
         <Flex h="90%" justify="center" align="center">
           {socket && <VideoTest socket={socket} />}

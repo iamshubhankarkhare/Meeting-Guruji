@@ -1,10 +1,20 @@
 const app = require('express')();
 const server = require('http').createServer(app);
 const io = require('socket.io')(server, { cors: { origin: '*' } });
+const cors = require('cors');
 const { v4: uuidv4 } = require('uuid');
 
+const bodyParser = require('body-parser');
+app.use(bodyParser.json()); // support json encoded bodies
+app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
+
+app.use(cors());
 app.get('/', (req, res) => {
   res.send('hello');
+});
+app.post('/createRoom', (req, res) => {
+  console.log('req  ', req.body);
+  res.send(uuidv4());
 });
 
 let sockets = {}; // socketId: { email, name, roomId, role }
@@ -12,14 +22,14 @@ let rooms = {}; // roomId: [{ email, name, socketId, role },...]
 let peers = {}; // roomId: [peerId,...]
 
 io.on('connection', (socket) => {
-  socket.on('createRoom', ({ currentUser }, callback) => {
-    const socketObj = {
-      role: 'teacher',
-    };
-    sockets[socket.id] = socketObj;
-    callback(uuidv4());
-  });
-
+  // socket.on('createRoom', ({ currentUser }, callback) => {
+  //   const socketObj = {
+  //     role: 'teacher',
+  //   };
+  //   sockets[socket.id] = socketObj;
+  //   callback(uuidv4());
+  // });
+  //
   // user joins the room
   socket.on('join', ({ currentUser, roomId }, callback) => {
     console.log('in join');
