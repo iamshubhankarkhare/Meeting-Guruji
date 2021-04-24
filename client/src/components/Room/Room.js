@@ -12,12 +12,11 @@ let socket;
 const Room = () => {
   const [showChat, setShowChat] = useState(true);
   const [participants, setParticipants] = useState([]);
+  const [teacherAccess, setTeacherAcess] = useState(true);
 
   const { id } = useParams();
-  console.log(id);
-  const isTeacher = window.location.hash == '#init' ? true : false;
+  const isTeacher = window.location.hash === '#init' ? true : false;
   const url = `${window.location.origin}/${id}`;
-  console.log(isTeacher);
 
   const { currentUser } = useAuth();
 
@@ -25,8 +24,8 @@ const Room = () => {
   useEffect(() => {
     socket = io(ENDPOINT);
     const roomId = id;
-    socket.emit('join', { currentUser, roomId }, (error) => {
-      console.log(error);
+    socket.emit('join', { currentUser, roomId, isTeacher }, (res) => {
+      setTeacherAcess(res);
     });
     socket.on('getParticipants', (users) => {
       const comparator = (userA, userB) => {
@@ -45,60 +44,71 @@ const Room = () => {
       users = [currentUser, ...users];
       setParticipants(users);
     });
-  }, [ENDPOINT, currentUser, id]);
+  }, [ENDPOINT, currentUser, id, isTeacher]);
 
   const showChatHandler = (showChatState) => {
     setShowChat(showChatState);
   };
+
   return (
-    <Flex h="100%">
-      {isTeacher && <ClipBoard url={url} currentUser={currentUser} />}
-      <Flex bg="gray.800" h="100%" w="75%" flexDirection="column">
-        <Flex h="90%" justify="center" align="center">
-          {socket && <VideoTest socket={socket} />}
+    <>
+      {console.log(isTeacher, teacherAccess)}
+      {console.log(participants)}
+      {(isTeacher && teacherAccess) || !isTeacher ? (
+        <Flex h="100%">
+          {isTeacher && <ClipBoard url={url} currentUser={currentUser} />}
+          <Flex bg="gray.800" h="100%" w="75%" flexDirection="column">
+            <Flex h="90%" justify="center" align="center">
+              {socket && <VideoTest socket={socket} />}
+            </Flex>
+            <Flex justify="center" h="10%" align="center" bg="white">
+              <Text mx="6" size="md">
+                Mute
+              </Text>
+              <Text mx="6" size="md">
+                Video off
+              </Text>
+              <Text mx="6" size="md">
+                End call
+              </Text>
+            </Flex>
+          </Flex>
+          <Flex h="100%" w="25%" flexDirection="column">
+            <Flex h="10%" mx="2">
+              <Button
+                size="md"
+                mt="2"
+                w="50%"
+                border="1px"
+                colorScheme="blue"
+                onClick={() => showChatHandler(true)}
+              >
+                Chat
+              </Button>
+              <Button
+                size="md"
+                mt="2"
+                w="50%"
+                border="1px"
+                colorScheme="blue"
+                onClick={() => showChatHandler(false)}
+              >
+                {`Participants (${participants.length})`}
+              </Button>
+            </Flex>
+            {showChat === true ? (
+              <>
+                {socket && <Chat participants={participants} socket={socket} />}
+              </>
+            ) : (
+              <Participants participants={participants} />
+            )}
+          </Flex>
         </Flex>
-        <Flex justify="center" h="10%" align="center" bg="white">
-          <Text mx="6" size="md">
-            Mute
-          </Text>
-          <Text mx="6" size="md">
-            Video off
-          </Text>
-          <Text mx="6" size="md">
-            End call
-          </Text>
-        </Flex>
-      </Flex>
-      <Flex h="100%" w="25%" flexDirection="column">
-        <Flex h="10%" mx="2">
-          <Button
-            size="md"
-            mt="2"
-            w="50%"
-            border="1px"
-            colorScheme="blue"
-            onClick={() => showChatHandler(true)}
-          >
-            Chat
-          </Button>
-          <Button
-            size="md"
-            mt="2"
-            w="50%"
-            border="1px"
-            colorScheme="blue"
-            onClick={() => showChatHandler(false)}
-          >
-            {`Participants (${participants.length})`}
-          </Button>
-        </Flex>
-        {showChat === true ? (
-          <>{socket && <Chat participants={participants} socket={socket} />}</>
-        ) : (
-          <Participants participants={participants} />
-        )}
-      </Flex>
-    </Flex>
+      ) : (
+        'You are not allowed to view this page....'
+      )}
+    </>
   );
 };
 

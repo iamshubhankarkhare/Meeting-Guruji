@@ -12,33 +12,80 @@ app.use(cors());
 app.get('/', (req, res) => {
   res.send('hello');
 });
-app.post('/createRoom', (req, res) => {
-  console.log('req  ', req.body);
-  res.send(uuidv4());
-});
 
 let sockets = {}; // socketId: { email, name, roomId, role }
-let rooms = {}; // roomId: [{ email, name, socketId, role },...]
+let rooms = {}; // roomId: [{ email, name, sockets: [socketId...], primaryRole },...]
 let peers = {}; // roomId: [peerId,...]
 
-io.on('connection', (socket) => {
-  // socket.on('createRoom', ({ currentUser }, callback) => {
-  //   const socketObj = {
-  //     role: 'teacher',
-  //   };
-  //   sockets[socket.id] = socketObj;
-  //   callback(uuidv4());
-  // });
-  //
-  // user joins the room
-  socket.on('join', ({ currentUser, roomId }, callback) => {
-    console.log('in join');
-    console.log(currentUser.email, currentUser.displayName, roomId, socket.id);
+app.post('/createRoom', (req, res) => {
+  const currentUser = req.body.currentUser;
+  const roomObj = {
+    email: currentUser.email,
+    name: currentUser.displayName,
+    primaryRole: 'teacher',
+  };
+  const roomId = uuidv4();
+  rooms[roomId] = [roomObj];
+  res.send(roomId);
+});
 
-    // check if user created the room...
+const getParticipants = (roomId) => {
+  let participants = [];
+  for (let roomObj of rooms[roomId]) {
+    for (let socketId of roomObj.sockets) {
+      participants.push({
+        email: roomObj.email,
+        name: roomObj.name,
+        socketId,
+        role: sockets[socketId].role,
+      });
+    }
+  }
+
+  return participants;
+};
+
+io.on('connection', (socket) => {
+  // user joins the room
+  socket.on('join', ({ currentUser, roomId, isTeacher }, callback) => {
+    console.log('in join');
+    console.log(
+      currentUser.email,
+      currentUser.displayName,
+      roomId,
+      socket.id,
+      isTeacher
+    );
+
+    if (!(roomId in rooms)) {
+      console.log('line 45', roomId);
+      callback(false);
+      return;
+    }
+
     let role = null;
-    if (socket.id in sockets) role = 'teacher';
-    else role = 'student';
+
+    if (isTeacher === true) {
+      // teacher access requested
+      const roomUserIndex = rooms[roomId].findIndex(
+        (roomObj) => roomObj.email === currentUser.email
+      );
+      if (
+        roomUserIndex !== -1 &&
+        rooms[roomId][roomUserIndex].primaryRole === 'teacher'
+      ) {
+        // teacher role present
+        console.log('line 78');
+        role = 'teacher';
+      } else {
+        // deny teacher access to the user
+        console.log('line 82');
+        callback(false);
+        return;
+      }
+    } else {
+      role = 'student';
+    }
 
     sockets[socket.id] = {
       email: currentUser.email,
@@ -47,26 +94,37 @@ io.on('connection', (socket) => {
       role,
     };
 
-    const roomObj = {
-      email: currentUser.email,
-      name: currentUser.displayName,
-      socketId: socket.id,
-      role,
-    };
+    const roomUserIndex = rooms[roomId].findIndex(
+      (roomObj) => roomObj.email === currentUser.email
+    );
+    if (roomUserIndex !== -1) {
+      console.log('line 101');
+      const socketsInRoom = rooms[roomId][roomUserIndex].sockets;
+      if (socketsInRoom === undefined) {
+        rooms[roomId][roomUserIndex].sockets = [socket.id];
+      } else {
+        rooms[roomId][roomUserIndex].sockets.push(socket.id);
+      }
+      console.log('line 108', rooms[roomId][roomUserIndex]);
+    } else {
+      console.log('line 110');
+      const roomObj = {
+        email: currentUser.email,
+        name: currentUser.displayName,
+        sockets: [socket.id],
+        primaryRole: role,
+      };
 
-    console.log(roomObj);
+      console.log('line 118', roomObj);
 
-    if (roomId in rooms) rooms[roomId].push(roomObj);
-    else {
-      rooms[roomId] = [roomObj];
+      rooms[roomId].push(roomObj);
     }
+
+    console.log('line 123, rooms:', rooms);
 
     socket.join(roomId);
 
-    io.to(roomId).emit(
-      'getParticipants',
-      rooms[roomId].filter((user) => user.socketId !== undefined)
-    );
+    io.to(roomId).emit('getParticipants', getParticipants(roomId));
 
     socket.emit('message', {
       user: 'Bot',
@@ -82,7 +140,8 @@ io.on('connection', (socket) => {
       time: new Date().getHours() + ':' + new Date().getMinutes(),
     });
 
-    callback();
+    if (role === 'teacher') callback(true);
+    else callback();
   });
 
   // a message is sent over chat
@@ -126,7 +185,7 @@ io.on('connection', (socket) => {
   socket.on('disconnect', (reason) => {
     console.log(reason);
     const socketUser = sockets[socket.id];
-    if (socketUser && 'email' in socketUser) {
+    if (socketUser) {
       console.log('in disconnect');
       console.log(socketUser);
 
@@ -138,17 +197,20 @@ io.on('connection', (socket) => {
       });
 
       rooms[socketUser.roomId].forEach((user) => {
-        if (user.socketId === socket.id) delete user.socketId;
+        user.sockets = user.sockets.filter(
+          (socketId) => socketId !== socket.id
+        );
       });
 
       io.to(socketUser.roomId).emit(
         'getParticipants',
-        rooms[socketUser.roomId].filter((user) => user.socketId !== undefined)
+        getParticipants(socketUser.roomId)
       );
 
       delete sockets[socket.id];
     }
   });
+
   // for peer
   socket.on('peer-join', (peerId) => {
     const roomId = sockets[socket.id].roomId;
