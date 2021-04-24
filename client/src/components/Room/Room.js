@@ -30,6 +30,7 @@ const Room = () => {
       if (res.roomExists === undefined) setRoomExists(true);
       else setRoomExists(res.roomExists);
     });
+
     socket.on('getParticipants', (users) => {
       const comparator = (userA, userB) => {
         if (userA.name < userB.name) return -1;
@@ -47,10 +48,42 @@ const Room = () => {
       users = [currentUser, ...users];
       setParticipants(users);
     });
-  }, [ENDPOINT, currentUser, id, isTeacher]);
+
+    socket.on('promoted', (user) => {
+      alert(
+        `You have been promoted to teacher role by ${user.displayName} (${user.email})!`
+      );
+      window.location.replace(`${url}#init`);
+      socket.disconnect();
+    });
+
+    socket.on('demoted', (user) => {
+      alert(
+        `You have been demoted to student role by ${user.displayName} (${user.email})!`
+      );
+      window.location.replace(`${url}`);
+      socket.disconnect();
+    });
+  }, [ENDPOINT, currentUser, id, isTeacher, url]);
 
   const showChatHandler = (showChatState) => {
     setShowChat(showChatState);
+  };
+
+  const handlePromotion = (participant) => {
+    socket.emit(
+      'promote',
+      { participant, promoter: currentUser, roomId: id },
+      (error) => {}
+    );
+  };
+
+  const handleDemotion = (participant) => {
+    socket.emit(
+      'demote',
+      { participant, demoter: currentUser, roomId: id },
+      (error) => {}
+    );
   };
 
   return (
@@ -107,7 +140,11 @@ const Room = () => {
                   )}
                 </>
               ) : (
-                <Participants participants={participants} />
+                <Participants
+                  participants={participants}
+                  handlePromotion={handlePromotion}
+                  handleDemotion={handleDemotion}
+                />
               )}
             </Flex>
           </Flex>

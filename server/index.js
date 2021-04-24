@@ -32,14 +32,16 @@ app.post('/createRoom', (req, res) => {
 
 const getParticipants = (roomId) => {
   let participants = [];
-  for (let roomObj of rooms[roomId]) {
-    for (let socketId of roomObj.sockets) {
-      participants.push({
-        email: roomObj.email,
-        name: roomObj.name,
-        socketId,
-        role: sockets[socketId].role,
-      });
+  if (roomId in rooms) {
+    for (let roomObj of rooms[roomId]) {
+      for (let socketId of roomObj.sockets) {
+        participants.push({
+          email: roomObj.email,
+          name: roomObj.name,
+          socketId,
+          role: sockets[socketId].role,
+        });
+      }
     }
   }
 
@@ -59,7 +61,7 @@ io.on('connection', (socket) => {
     );
 
     if (!(roomId in rooms)) {
-      console.log('line 61', roomId);
+      console.log(roomId);
       callback({
         roomExists: false,
       });
@@ -78,11 +80,9 @@ io.on('connection', (socket) => {
         rooms[roomId][roomUserIndex].primaryRole === 'teacher'
       ) {
         // teacher role present
-        console.log('line 78');
         role = 'teacher';
       } else {
         // deny teacher access to the user
-        console.log('line 82');
         callback({
           teacherAccess: false,
         });
@@ -103,16 +103,14 @@ io.on('connection', (socket) => {
       (roomObj) => roomObj.email === currentUser.email
     );
     if (roomUserIndex !== -1) {
-      console.log('line 101');
       const socketsInRoom = rooms[roomId][roomUserIndex].sockets;
       if (socketsInRoom === undefined) {
         rooms[roomId][roomUserIndex].sockets = [socket.id];
       } else {
         rooms[roomId][roomUserIndex].sockets.push(socket.id);
       }
-      console.log('line 108', rooms[roomId][roomUserIndex]);
+      console.log(rooms[roomId][roomUserIndex]);
     } else {
-      console.log('line 110');
       const roomObj = {
         email: currentUser.email,
         name: currentUser.displayName,
@@ -120,12 +118,12 @@ io.on('connection', (socket) => {
         primaryRole: role,
       };
 
-      console.log('line 118', roomObj);
+      console.log(roomObj);
 
       rooms[roomId].push(roomObj);
     }
 
-    console.log('line 123, rooms:', rooms);
+    console.log('rooms:', rooms);
 
     socket.join(roomId);
 
@@ -184,6 +182,32 @@ io.on('connection', (socket) => {
         });
       }
     }
+  });
+
+  // promotion to teacher
+  socket.on('promote', ({ participant, promoter, roomId }, callback) => {
+    const roomUserIndex = rooms[roomId].findIndex(
+      (roomObj) => roomObj.email === participant.email
+    );
+    rooms[roomId][roomUserIndex].primaryRole = 'teacher';
+    sockets[participant.socketId].role = 'teacher';
+
+    io.to(participant.socketId).emit('promoted', promoter);
+
+    callback();
+  });
+
+  // demotion to student
+  socket.on('demote', ({ participant, demoter, roomId }, callback) => {
+    const roomUserIndex = rooms[roomId].findIndex(
+      (roomObj) => roomObj.email === participant.email
+    );
+    rooms[roomId][roomUserIndex].primaryRole = 'student';
+    sockets[participant.socketId].role = 'student';
+
+    io.to(participant.socketId).emit('demoted', demoter);
+
+    callback();
   });
 
   // socket gets disconnected
