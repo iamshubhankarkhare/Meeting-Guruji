@@ -58,8 +58,10 @@ io.on('connection', (socket) => {
     );
 
     if (!(roomId in rooms)) {
-      console.log('line 45', roomId);
-      callback(false);
+      console.log('line 61', roomId);
+      callback({
+        roomExists: false,
+      });
       return;
     }
 
@@ -80,7 +82,9 @@ io.on('connection', (socket) => {
       } else {
         // deny teacher access to the user
         console.log('line 82');
-        callback(false);
+        callback({
+          teacherAccess: false,
+        });
         return;
       }
     } else {
@@ -140,8 +144,8 @@ io.on('connection', (socket) => {
       time: new Date().getHours() + ':' + new Date().getMinutes(),
     });
 
-    if (role === 'teacher') callback(true);
-    else callback();
+    if (role === 'teacher') callback({ teacherAccess: true });
+    else callback({});
   });
 
   // a message is sent over chat
