@@ -5,6 +5,7 @@ const cors = require('cors');
 const { v4: uuidv4 } = require('uuid');
 
 const bodyParser = require('body-parser');
+const e = require('cors');
 app.use(bodyParser.json()); // support json encoded bodies
 app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
 
@@ -193,23 +194,34 @@ io.on('connection', (socket) => {
       console.log('in disconnect');
       console.log(socketUser);
 
-      socket.broadcast.to(socketUser.roomId).emit('message', {
-        user: 'Bot',
-        to: 'Everyone',
-        text: `${socketUser.name} just left`,
-        time: new Date().getHours() + ':' + new Date().getMinutes(),
-      });
-
       rooms[socketUser.roomId].forEach((user) => {
         user.sockets = user.sockets.filter(
           (socketId) => socketId !== socket.id
         );
       });
 
-      io.to(socketUser.roomId).emit(
-        'getParticipants',
-        getParticipants(socketUser.roomId)
-      );
+      if (
+        rooms[socketUser.roomId].find(
+          (roomObj) => roomObj.sockets.length !== 0
+        ) === undefined
+      ) {
+        console.log('room empty');
+        delete rooms[socketUser.roomId];
+      } else {
+        socket.broadcast.to(socketUser.roomId).emit('message', {
+          user: 'Bot',
+          to: 'Everyone',
+          text: `${socketUser.name} just left`,
+          time: new Date().getHours() + ':' + new Date().getMinutes(),
+        });
+
+        io.to(socketUser.roomId).emit(
+          'getParticipants',
+          getParticipants(socketUser.roomId)
+        );
+      }
+
+      console.log(rooms);
 
       delete sockets[socket.id];
     }
