@@ -14,10 +14,8 @@ const Room = () => {
   const [participants, setParticipants] = useState([]);
 
   const { id } = useParams();
-  console.log(id);
   const isTeacher = window.location.hash == '#init' ? true : false;
   const url = `${window.location.origin}/${id}`;
-  console.log(isTeacher);
 
   const { currentUser } = useAuth();
 
