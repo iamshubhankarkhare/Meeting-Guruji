@@ -48,18 +48,27 @@ const Home = () => {
     <>
       <Header />
       <Flex w="100%" h="92%">
-        <Flex w="50%" mx="20" justify="center" flexDirection="column">
+        <Flex
+          w={['100%', '50%']}
+          mx={[12, 20]}
+          justify="center"
+          flexDirection="column"
+        >
           <Stack spacing="24px" justify="center">
-            <Text fontSize="7xl" color="gray.700" fontWeight="bolder">
+            <Text
+              fontSize={['4xl', '7xl']}
+              color="gray.700"
+              fontWeight="bolder"
+            >
               Meeting Guruji
             </Text>
-            <Text color="gray.600" fontSize="2xl" fontWeight="bold">
+            <Text color="gray.600" fontSize={['md', '2xl']} fontWeight="bold">
               For students. By students!
             </Text>
             {!currentUser && (
               <Button
                 _hover={{}}
-                w="xs"
+                w={['2xs', 'xs']}
                 bg="blue.500"
                 color="white"
                 py="4"

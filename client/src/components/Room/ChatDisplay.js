@@ -4,7 +4,6 @@ import { Text, Input, Select, Button, Flex } from '@chakra-ui/react';
 function ChatDisplay({ tempMsg }) {
   const messageEl = useRef(null);
   const [allMsgs, setAllmsgs] = useState([]);
-  console.log(allMsgs);
   useEffect(() => {
     if (messageEl) {
       messageEl.current.addEventListener('DOMNodeInserted', (event) => {

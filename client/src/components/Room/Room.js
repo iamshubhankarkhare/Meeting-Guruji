@@ -1,20 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router';
-import {
-  useDisclosure,
-  Icon,
-  Text,
-  Flex,
-  Button,
-  Drawer,
-  DrawerBody,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerOverlay,
-  DrawerContent,
-  DrawerCloseButton,
-} from '@chakra-ui/react';
-import { RiChat4Line, RiArrowLeftLine } from 'react-icons/ri';
+import { useHistory } from 'react-router-dom';
+import { Icon, Text, Flex, Button } from '@chakra-ui/react';
+import { FcEndCall } from 'react-icons/fc';
+import { BsFillMicMuteFill } from 'react-icons/bs';
+import { FaVideoSlash } from 'react-icons/fa';
+
 import io from 'socket.io-client';
 import Chat from './Chat.js';
 import Participants from './Participants.js';
@@ -51,8 +42,12 @@ const Room = () => {
   const [participants, setParticipants] = useState([]);
   const [teacherAccess, setTeacherAcess] = useState(true);
   const [roomExists, setRoomExists] = useState(false);
+  const [isMuted, setIsmuted] = useState(true);
+  const [isVideoOff, setIsvideooff] = useState(false);
+  const [isVisible, setIsvisible] = useState(false);
 
   const { id } = useParams();
+  const history = useHistory();
   const isTeacher = window.location.hash === '#init' ? true : false;
   const url = `${window.location.origin}/${id}`;
 
@@ -125,29 +120,55 @@ const Room = () => {
     );
   };
 
+  const handleEndCall = () => {
+    console.log('ending call');
+    history.push('/');
+  };
+
   return (
     <>
       {roomExists ? (
         (isTeacher && teacherAccess) || !isTeacher ? (
-          <Flex h="100%">
+          <Flex h="100%" flexDirection={['column', 'row']}>
             {isTeacher && <ClipBoard url={url} currentUser={currentUser} />}
             <Flex bg="gray.800" h="100%" w="100%" flexDirection="column">
               <Flex h="90%" justify="center" align="center">
-                {socket && <VideoTest socket={socket} />}
+                {socket && (
+                  <VideoTest
+                    socket={socket}
+                    isMuted={isMuted}
+                    isVideoOff={isVideoOff}
+                  />
+                )}
               </Flex>
               <Flex justify="center" h="10vh" align="center" bg="green.100">
-                <Text mx="6" size="md">
-                  Mute
-                </Text>
-                <Text mx="6" size="md">
-                  Video off
-                </Text>
-                <Text mx="6" size="md">
-                  End call
-                </Text>
+                <Button
+                  mx="6"
+                  bg="none"
+                  onClick={() => setIsvideooff(!isVideoOff)}
+                >
+                  <Icon
+                    as={FaVideoSlash}
+                    w={[8, 12]}
+                    h={[8, 12]}
+                    color={isVideoOff ? 'red' : 'black'}
+                  />
+                </Button>
+
+                <Button mx="6" bg="none" onClick={() => setIsmuted(!isMuted)}>
+                  <Icon
+                    as={BsFillMicMuteFill}
+                    w={[8, 12]}
+                    h={[8, 12]}
+                    color={isMuted ? 'red' : 'black'}
+                  />
+                </Button>
+                <Button mx="6" bg="none" onClick={() => handleEndCall()}>
+                  <Icon as={FcEndCall} w={[8, 12]} h={[8, 12]} />
+                </Button>
               </Flex>
             </Flex>
-            <Flex flexDirection="column" w="xl" bg="white">
+            <Flex flexDirection="column" w={['sm', 'xl']} bg="white">
               <ChatParticipants />
               {showChat === true ? (
                 <>
@@ -163,6 +184,7 @@ const Room = () => {
                 />
               )}
             </Flex>
+            )}
           </Flex>
         ) : (
           'You are not allowed to view this page....'

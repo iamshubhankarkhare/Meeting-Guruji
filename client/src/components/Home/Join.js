@@ -22,21 +22,22 @@ function Join() {
 
   return (
     <Flex w="100%" h="100%">
-      <Flex>
+      <Flex flexDirection={['column', 'row']}>
         <Input
           my="2"
           placeholder="Enter meeting link"
           value={roomId}
           size="lg"
-          w="sm"
+          w={['xs', 'sm']}
           onKeyDown={(e) => handleKeyDown(e)}
           borderColor="blue.200"
           onChange={(e) => handleChange(e)}
         />
         <Button
           my="2"
-          mx="4"
+          mx={[0, 4]}
           size="lg"
+          w={['2xs', '20']}
           colorScheme="blue"
           onClick={() => handleClick()}
         >

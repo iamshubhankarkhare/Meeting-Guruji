@@ -15,7 +15,6 @@ const Create = () => {
     axios
       .post(url, { currentUser })
       .then((res) => {
-        console.log(res);
         history.push(`/${res.data}#init`);
       })
       .catch((error) => {
@@ -25,7 +24,13 @@ const Create = () => {
   return (
     <Flex w="100%" h="100%">
       <Flex>
-        <Button mt="8" size="lg" colorScheme="blue" onClick={handleClick}>
+        <Button
+          mt="8"
+          size="lg"
+          w={['2xs', 'md']}
+          colorScheme="blue"
+          onClick={handleClick}
+        >
           Create New Meeting
         </Button>
       </Flex>

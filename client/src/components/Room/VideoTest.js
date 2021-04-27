@@ -6,9 +6,10 @@ import Peer from 'peerjs';
 import './VideoTest.css';
 
 let peers = {};
-const VideoBox = React.memo(({ socket }) => {
+const VideoBox = React.memo(({ socket, isMuted, isVideoOff }) => {
   const videoGrid = useRef(null);
-  console.log('called');
+  const [streamObj, setStreamobj] = useState();
+  console.log(isVideoOff);
 
   useEffect(() => {
     const peer = new Peer();
@@ -21,6 +22,7 @@ const VideoBox = React.memo(({ socket }) => {
       })
       .then((myStream) => {
         addVideoStream(myVideo, myStream);
+        setStreamobj(myStream);
 
         // answering a call
         peer.on('call', (call) => {
@@ -70,7 +72,7 @@ const VideoBox = React.memo(({ socket }) => {
     // add video element to videoGrid
     function addVideoStream(video, stream) {
       video.srcObject = stream;
-      video.muted = true;
+      video.muted = isMuted;
       video.addEventListener('loadedmetadata', () => {
         video.play();
       });
@@ -78,6 +80,11 @@ const VideoBox = React.memo(({ socket }) => {
       node.appendChild(video);
     }
   }, [videoGrid, socket]);
+
+  useEffect(() => {
+    let video = document.querySelector('video');
+    if (video) video.muted = !video.muted;
+  }, [isMuted]);
 
   return (
     <SimpleGrid
@@ -88,7 +95,7 @@ const VideoBox = React.memo(({ socket }) => {
       verticalAlign="middle"
       justifyItems="center"
       alignContent="center"
-      minChildWidth="480px"
+      minChildWidth={['200px', '480px']}
       ref={videoGrid}
     ></SimpleGrid>
   );
