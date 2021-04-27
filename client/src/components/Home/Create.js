@@ -7,7 +7,7 @@ import { useAuth } from '../../contexts/AuthContext';
 const Create = () => {
   const { currentUser } = useAuth();
 
-  const ENDPOINT = 'http://localhost:5000/';
+  const ENDPOINT = process.env.REACT_APP_ENDPOINT;
   const history = useHistory();
 
   const handleClick = () => {

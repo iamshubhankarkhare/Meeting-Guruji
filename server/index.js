@@ -51,17 +51,8 @@ const getParticipants = (roomId) => {
 io.on('connection', (socket) => {
   // user joins the room
   socket.on('join', ({ currentUser, roomId, isTeacher }, callback) => {
-    console.log('in join');
-    console.log(
-      currentUser.email,
-      currentUser.displayName,
-      roomId,
-      socket.id,
-      isTeacher
-    );
 
     if (!(roomId in rooms)) {
-      console.log(roomId);
       callback({
         roomExists: false,
       });
@@ -109,7 +100,6 @@ io.on('connection', (socket) => {
       } else {
         rooms[roomId][roomUserIndex].sockets.push(socket.id);
       }
-      console.log(rooms[roomId][roomUserIndex]);
     } else {
       const roomObj = {
         email: currentUser.email,
@@ -118,12 +108,10 @@ io.on('connection', (socket) => {
         primaryRole: role,
       };
 
-      console.log(roomObj);
 
       rooms[roomId].push(roomObj);
     }
 
-    console.log('rooms:', rooms);
 
     socket.join(roomId);
 
@@ -150,7 +138,6 @@ io.on('connection', (socket) => {
   // a message is sent over chat
   socket.on('sendMessage', (data) => {
     const socketUser = sockets[socket.id];
-    console.log(data);
     if (socketUser) {
       let messageObj = {
         text: data.message,
@@ -212,11 +199,8 @@ io.on('connection', (socket) => {
 
   // socket gets disconnected
   socket.on('disconnect', (reason) => {
-    console.log(reason);
     const socketUser = sockets[socket.id];
     if (socketUser) {
-      console.log('in disconnect');
-      console.log(socketUser);
 
       rooms[socketUser.roomId].forEach((user) => {
         user.sockets = user.sockets.filter(
@@ -229,7 +213,6 @@ io.on('connection', (socket) => {
           (roomObj) => roomObj.sockets.length !== 0
         ) === undefined
       ) {
-        console.log('room empty');
         delete rooms[socketUser.roomId];
       } else {
         socket.broadcast.to(socketUser.roomId).emit('message', {
@@ -245,7 +228,6 @@ io.on('connection', (socket) => {
         );
       }
 
-      console.log(rooms);
 
       delete sockets[socket.id];
     }
