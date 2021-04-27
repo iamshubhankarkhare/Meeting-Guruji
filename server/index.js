@@ -1,4 +1,6 @@
 const app = require('express')();
+const express = require('express');
+const path = require('path');
 const server = require('http').createServer(app);
 const io = require('socket.io')(server, { cors: { origin: '*' } });
 const cors = require('cors');
@@ -10,10 +12,20 @@ app.use(bodyParser.json()); // support json encoded bodies
 app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
 
 app.use(cors());
-app.get('/', (req, res) => {
-  res.send('hello');
-});
 
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, '/../client/build')));
+  app.get('*', (req, res) => {
+    res.sendFile(
+      path.resolve(__dirname, '../', 'client', 'build', 'index.html')
+    );
+  });
+}
+//
+// app.get('/', (req, res) => {
+//   res.send('hello');
+// });
+//
 let sockets = {}; // socketId: { email, name, roomId, role }
 let rooms = {}; // roomId: [{ email, name, sockets: [socketId...], primaryRole },...]
 let peers = {}; // roomId: [peerId,...]
@@ -51,7 +63,6 @@ const getParticipants = (roomId) => {
 io.on('connection', (socket) => {
   // user joins the room
   socket.on('join', ({ currentUser, roomId, isTeacher }, callback) => {
-
     if (!(roomId in rooms)) {
       callback({
         roomExists: false,
@@ -108,10 +119,8 @@ io.on('connection', (socket) => {
         primaryRole: role,
       };
 
-
       rooms[roomId].push(roomObj);
     }
-
 
     socket.join(roomId);
 
@@ -201,7 +210,6 @@ io.on('connection', (socket) => {
   socket.on('disconnect', (reason) => {
     const socketUser = sockets[socket.id];
     if (socketUser) {
-
       rooms[socketUser.roomId].forEach((user) => {
         user.sockets = user.sockets.filter(
           (socketId) => socketId !== socket.id
@@ -227,7 +235,6 @@ io.on('connection', (socket) => {
           getParticipants(socketUser.roomId)
         );
       }
-
 
       delete sockets[socket.id];
     }
