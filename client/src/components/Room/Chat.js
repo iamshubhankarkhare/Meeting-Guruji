@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Text, Input, Select, Button, Flex } from '@chakra-ui/react';
+import { Text, Select, Flex } from '@chakra-ui/react';
 import InputMsg from './Input.js';
 import ChatDisplay from './ChatDisplay';
 
@@ -25,7 +25,7 @@ const Chat = React.memo(({ participants, socket }) => {
     socket.emit('sendMessage', {
       receiver: messageReceiver,
       message: newMsg,
-      time: new Date(),
+      time: new Date().getHours() + ':' + new Date().getMinutes(),
     });
     setNewMsg('');
   };

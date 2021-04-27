@@ -1,30 +1,19 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import axios from 'axios';
 import { Flex, Button } from '@chakra-ui/react';
-import { useAuth } from '../../contexts/AuthContext';
 import { useHistory } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 
 const Create = () => {
   const { currentUser } = useAuth();
 
-  const ENDPOINT = 'http://localhost:5000/';
+  const ENDPOINT = process.env.REACT_APP_ENDPOINT;
   const history = useHistory();
-  //   socket = io(ENDPOINT);
-  // }, [ENDPOINT]);
-  //
-  // const handleClick = () => {
-  //   socket.emit('createRoom', { currentUser }, (room) => {
-  //     console.log(room);
-  //     window.location.replace(`room/${room}`);
-  //   });
-  // };
 
   const handleClick = () => {
     const url = `${ENDPOINT}createRoom`;
     axios
-      .post(url, {
-        todo: 'Buy the milk',
-      })
+      .post(url, { currentUser })
       .then((res) => {
         console.log(res);
         history.push(`/${res.data}#init`);

@@ -5,6 +5,7 @@ const cors = require('cors');
 const { v4: uuidv4 } = require('uuid');
 
 const bodyParser = require('body-parser');
+const e = require('cors');
 app.use(bodyParser.json()); // support json encoded bodies
 app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
 
@@ -12,33 +13,75 @@ app.use(cors());
 app.get('/', (req, res) => {
   res.send('hello');
 });
-app.post('/createRoom', (req, res) => {
-  console.log('req  ', req.body);
-  res.send(uuidv4());
-});
 
 let sockets = {}; // socketId: { email, name, roomId, role }
-let rooms = {}; // roomId: [{ email, name, socketId, role },...]
+let rooms = {}; // roomId: [{ email, name, sockets: [socketId...], primaryRole },...]
 let peers = {}; // roomId: [peerId,...]
 
-io.on('connection', (socket) => {
-  // socket.on('createRoom', ({ currentUser }, callback) => {
-  //   const socketObj = {
-  //     role: 'teacher',
-  //   };
-  //   sockets[socket.id] = socketObj;
-  //   callback(uuidv4());
-  // });
-  //
-  // user joins the room
-  socket.on('join', ({ currentUser, roomId }, callback) => {
-    console.log('in join');
-    console.log(currentUser.email, currentUser.displayName, roomId, socket.id);
+app.post('/createRoom', (req, res) => {
+  const currentUser = req.body.currentUser;
+  const roomObj = {
+    email: currentUser.email,
+    name: currentUser.displayName,
+    primaryRole: 'teacher',
+  };
+  const roomId = uuidv4();
+  rooms[roomId] = [roomObj];
+  res.send(roomId);
+});
 
-    // check if user created the room...
+const getParticipants = (roomId) => {
+  let participants = [];
+  if (roomId in rooms) {
+    for (let roomObj of rooms[roomId]) {
+      for (let socketId of roomObj.sockets) {
+        participants.push({
+          email: roomObj.email,
+          name: roomObj.name,
+          socketId,
+          role: sockets[socketId].role,
+        });
+      }
+    }
+  }
+
+  return participants;
+};
+
+io.on('connection', (socket) => {
+  // user joins the room
+  socket.on('join', ({ currentUser, roomId, isTeacher }, callback) => {
+
+    if (!(roomId in rooms)) {
+      callback({
+        roomExists: false,
+      });
+      return;
+    }
+
     let role = null;
-    if (socket.id in sockets) role = 'teacher';
-    else role = 'student';
+
+    if (isTeacher === true) {
+      // teacher access requested
+      const roomUserIndex = rooms[roomId].findIndex(
+        (roomObj) => roomObj.email === currentUser.email
+      );
+      if (
+        roomUserIndex !== -1 &&
+        rooms[roomId][roomUserIndex].primaryRole === 'teacher'
+      ) {
+        // teacher role present
+        role = 'teacher';
+      } else {
+        // deny teacher access to the user
+        callback({
+          teacherAccess: false,
+        });
+        return;
+      }
+    } else {
+      role = 'student';
+    }
 
     sockets[socket.id] = {
       email: currentUser.email,
@@ -47,26 +90,32 @@ io.on('connection', (socket) => {
       role,
     };
 
-    const roomObj = {
-      email: currentUser.email,
-      name: currentUser.displayName,
-      socketId: socket.id,
-      role,
-    };
+    const roomUserIndex = rooms[roomId].findIndex(
+      (roomObj) => roomObj.email === currentUser.email
+    );
+    if (roomUserIndex !== -1) {
+      const socketsInRoom = rooms[roomId][roomUserIndex].sockets;
+      if (socketsInRoom === undefined) {
+        rooms[roomId][roomUserIndex].sockets = [socket.id];
+      } else {
+        rooms[roomId][roomUserIndex].sockets.push(socket.id);
+      }
+    } else {
+      const roomObj = {
+        email: currentUser.email,
+        name: currentUser.displayName,
+        sockets: [socket.id],
+        primaryRole: role,
+      };
 
-    console.log(roomObj);
 
-    if (roomId in rooms) rooms[roomId].push(roomObj);
-    else {
-      rooms[roomId] = [roomObj];
+      rooms[roomId].push(roomObj);
     }
+
 
     socket.join(roomId);
 
-    io.to(roomId).emit(
-      'getParticipants',
-      rooms[roomId].filter((user) => user.socketId !== undefined)
-    );
+    io.to(roomId).emit('getParticipants', getParticipants(roomId));
 
     socket.emit('message', {
       user: 'Bot',
@@ -82,13 +131,13 @@ io.on('connection', (socket) => {
       time: new Date().getHours() + ':' + new Date().getMinutes(),
     });
 
-    callback();
+    if (role === 'teacher') callback({ teacherAccess: true });
+    else callback({});
   });
 
   // a message is sent over chat
   socket.on('sendMessage', (data) => {
     const socketUser = sockets[socket.id];
-    console.log(data);
     if (socketUser) {
       let messageObj = {
         text: data.message,
@@ -122,33 +171,68 @@ io.on('connection', (socket) => {
     }
   });
 
+  // promotion to teacher
+  socket.on('promote', ({ participant, promoter, roomId }, callback) => {
+    const roomUserIndex = rooms[roomId].findIndex(
+      (roomObj) => roomObj.email === participant.email
+    );
+    rooms[roomId][roomUserIndex].primaryRole = 'teacher';
+    sockets[participant.socketId].role = 'teacher';
+
+    io.to(participant.socketId).emit('promoted', promoter);
+
+    callback();
+  });
+
+  // demotion to student
+  socket.on('demote', ({ participant, demoter, roomId }, callback) => {
+    const roomUserIndex = rooms[roomId].findIndex(
+      (roomObj) => roomObj.email === participant.email
+    );
+    rooms[roomId][roomUserIndex].primaryRole = 'student';
+    sockets[participant.socketId].role = 'student';
+
+    io.to(participant.socketId).emit('demoted', demoter);
+
+    callback();
+  });
+
   // socket gets disconnected
   socket.on('disconnect', (reason) => {
-    console.log(reason);
     const socketUser = sockets[socket.id];
-    if (socketUser && 'email' in socketUser) {
-      console.log('in disconnect');
-      console.log(socketUser);
-
-      socket.broadcast.to(socketUser.roomId).emit('message', {
-        user: 'Bot',
-        to: 'Everyone',
-        text: `${socketUser.name} just left`,
-        time: new Date().getHours() + ':' + new Date().getMinutes(),
-      });
+    if (socketUser) {
 
       rooms[socketUser.roomId].forEach((user) => {
-        if (user.socketId === socket.id) delete user.socketId;
+        user.sockets = user.sockets.filter(
+          (socketId) => socketId !== socket.id
+        );
       });
 
-      io.to(socketUser.roomId).emit(
-        'getParticipants',
-        rooms[socketUser.roomId].filter((user) => user.socketId !== undefined)
-      );
+      if (
+        rooms[socketUser.roomId].find(
+          (roomObj) => roomObj.sockets.length !== 0
+        ) === undefined
+      ) {
+        delete rooms[socketUser.roomId];
+      } else {
+        socket.broadcast.to(socketUser.roomId).emit('message', {
+          user: 'Bot',
+          to: 'Everyone',
+          text: `${socketUser.name} just left`,
+          time: new Date().getHours() + ':' + new Date().getMinutes(),
+        });
+
+        io.to(socketUser.roomId).emit(
+          'getParticipants',
+          getParticipants(socketUser.roomId)
+        );
+      }
+
 
       delete sockets[socket.id];
     }
   });
+
   // for peer
   socket.on('peer-join', (peerId) => {
     const roomId = sockets[socket.id].roomId;

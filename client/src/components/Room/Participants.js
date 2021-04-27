@@ -1,29 +1,53 @@
 import React from 'react';
-import { Button, Flex } from '@chakra-ui/react';
+import {
+  Box,
+  Flex,
+  Menu,
+  MenuButton,
+  IconButton,
+  MenuList,
+  MenuItem,
+} from '@chakra-ui/react';
+import { BsThreeDotsVertical } from 'react-icons/bs';
 
-const Participants = ({ participants }) => {
-  return (
-    <Flex h="80%" flexDirection="column" w="100%">
-      {participants.map((participant, i) => (
-        <Flex w="100%" justify="space-between" key={i}>
-          <Button
-            key={i}
-            fontWeight="bold"
-            mt="2"
-            mx="4"
-            border="1px"
-            borderColor="gray.600"
-            color="gray.600"
-            w="100%"
-          >
-            {(participant.name.length > 30
-              ? participant.name.substring(0, 27) + '...'
-              : participant.name) + (i === 0 ? ' (You)' : '')}
-          </Button>
-        </Flex>
-      ))}
-    </Flex>
-  );
-};
+const Participants = React.memo(
+  ({ participants, handlePromotion, handleDemotion }) => {
+    return (
+      <Flex h="80%" flexDirection="column" w="90%" mx="4">
+        {participants.map((participant, i) => (
+          <>
+            <Flex justify="space-between">
+              <Box fontWeight="bold">
+                {(participant.name.length > 30
+                  ? participant.name.substring(0, 27) + '...'
+                  : participant.name) + (i === 0 ? ' (You)' : '')}
+              </Box>
+              {participants[0].role === 'teacher' ? (
+                <Menu>
+                  <MenuButton
+                    as={IconButton}
+                    icon={<BsThreeDotsVertical />}
+                    color="blue.400"
+                  ></MenuButton>
+                  <MenuList>
+                    {participant.role === 'student' ? (
+                      <MenuItem onClick={() => handlePromotion(participant)}>
+                        Promote
+                      </MenuItem>
+                    ) : (
+                      <MenuItem onClick={() => handleDemotion(participant)}>
+                        Demote
+                      </MenuItem>
+                    )}
+                  </MenuList>
+                </Menu>
+              ) : null}
+            </Flex>
+          </>
+        ))}
+      </Flex>
+    );
+  }
+);
 
 export default Participants;
