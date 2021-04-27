@@ -7,7 +7,7 @@ import { useAuth } from '../../contexts/AuthContext';
 const Create = () => {
   const { currentUser } = useAuth();
 
-  const ENDPOINT = process.env.REACT_APP_ENDPOINT;
+  const ENDPOINT = process.env.PORT;
   const history = useHistory();
 
   const handleClick = () => {
