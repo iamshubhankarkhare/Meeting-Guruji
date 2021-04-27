@@ -1,13 +1,22 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Text, Input, Select, Button, Flex } from '@chakra-ui/react';
 
 function ChatDisplay({ tempMsg }) {
+  const messageEl = useRef(null);
   const [allMsgs, setAllmsgs] = useState([]);
+  useEffect(() => {
+    if (messageEl) {
+      messageEl.current.addEventListener('DOMNodeInserted', (event) => {
+        const { currentTarget: target } = event;
+        target.scroll({ top: target.scrollHeight, behavior: 'smooth' });
+      });
+    }
+  }, []);
   useEffect(() => {
     setAllmsgs([...allMsgs, tempMsg]);
   }, [tempMsg]);
   return (
-    <Flex h="80%" flexDirection="column">
+    <Flex flexDirection="column" ref={messageEl} overflowY="scroll">
       {allMsgs &&
         allMsgs.map((message, i) => (
           <Flex key={i} flexDirection="column">

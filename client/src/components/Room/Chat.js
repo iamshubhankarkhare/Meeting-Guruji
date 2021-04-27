@@ -31,14 +31,15 @@ const Chat = React.memo(({ participants, socket }) => {
   };
 
   return (
-    <>
-      <Flex>
-        <Text ml="2"> To: </Text>
+    <Flex flexDirection="column" h="100%">
+      <Flex align="center" my={2}>
+        <Text ml="2" textAlign="middle">
+          To:
+        </Text>
         <Select
           placeholder="Everyone"
           w="40%"
           mx="4"
-          mb="4"
           onChange={handleSelectChange}
         >
           {participants.map(
@@ -53,9 +54,11 @@ const Chat = React.memo(({ participants, socket }) => {
           )}
         </Select>
       </Flex>
-      <ChatDisplay tempMsg={tempMsg} />
-      <InputMsg handleClick={handleClick} />
-    </>
+      <Flex justify="space-between" flexDirection="column" h="100%">
+        <ChatDisplay tempMsg={tempMsg} />
+        <InputMsg handleClick={handleClick} />
+      </Flex>
+    </Flex>
   );
 });
 

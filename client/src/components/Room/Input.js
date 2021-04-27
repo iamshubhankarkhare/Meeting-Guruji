@@ -11,7 +11,7 @@ function InputMsg({ handleClick }) {
   };
 
   return (
-    <Flex h="10%" mx="4">
+    <Flex h="10%" mx="4" align="center">
       <Input
         w="75%"
         borderColor="blue.300"

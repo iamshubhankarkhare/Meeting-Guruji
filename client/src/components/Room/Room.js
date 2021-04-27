@@ -1,6 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router';
-import { Text, Flex, Button } from '@chakra-ui/react';
+import {
+  useDisclosure,
+  Text,
+  Flex,
+  Button,
+  Drawer,
+  DrawerBody,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerOverlay,
+  DrawerContent,
+  DrawerCloseButton,
+} from '@chakra-ui/react';
 import io from 'socket.io-client';
 import Chat from './Chat.js';
 import Participants from './Participants.js';
@@ -9,11 +21,41 @@ import VideoTest from './VideoTest';
 import ClipBoard from './ClipBoard';
 
 let socket;
+
 const Room = () => {
+  const ChatParticipants = () => (
+    <>
+      <Flex mx="2">
+        <Button
+          size="md"
+          mt="2"
+          w="50%"
+          border="1px"
+          colorScheme="blue"
+          onClick={() => showChatHandler(true)}
+        >
+          Chat
+        </Button>
+        <Button
+          size="md"
+          mt="2"
+          w="50%"
+          border="1px"
+          colorScheme="blue"
+          onClick={() => showChatHandler(false)}
+        >
+          {`Participants (${participants.length})`}
+        </Button>
+      </Flex>
+    </>
+  );
   const [showChat, setShowChat] = useState(true);
   const [participants, setParticipants] = useState([]);
   const [teacherAccess, setTeacherAcess] = useState(true);
   const [roomExists, setRoomExists] = useState(false);
+
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const btnRef = React.useRef();
 
   const { id } = useParams();
   const isTeacher = window.location.hash === '#init' ? true : false;
@@ -89,17 +131,15 @@ const Room = () => {
 
   return (
     <>
-      {console.log(isTeacher, teacherAccess)}
-      {console.log(participants)}
       {roomExists ? (
         (isTeacher && teacherAccess) || !isTeacher ? (
           <Flex h="100%">
             {isTeacher && <ClipBoard url={url} currentUser={currentUser} />}
-            <Flex bg="gray.800" h="100%" w="75%" flexDirection="column">
+            <Flex bg="gray.800" h="100%" w="100%" flexDirection="column">
               <Flex h="90%" justify="center" align="center">
                 {socket && <VideoTest socket={socket} />}
               </Flex>
-              <Flex justify="center" h="10%" align="center" bg="white">
+              <Flex justify="center" h="10vh" align="center" bg="green.100">
                 <Text mx="6" size="md">
                   Mute
                 </Text>
@@ -111,43 +151,39 @@ const Room = () => {
                 </Text>
               </Flex>
             </Flex>
-            <Flex h="100%" w="25%" flexDirection="column">
-              <Flex h="10%" mx="2">
-                <Button
-                  size="md"
-                  mt="2"
-                  w="50%"
-                  border="1px"
-                  colorScheme="blue"
-                  onClick={() => showChatHandler(true)}
-                >
-                  Chat
-                </Button>
-                <Button
-                  size="md"
-                  mt="2"
-                  w="50%"
-                  border="1px"
-                  colorScheme="blue"
-                  onClick={() => showChatHandler(false)}
-                >
-                  {`Participants (${participants.length})`}
-                </Button>
-              </Flex>
-              {showChat === true ? (
-                <>
-                  {socket && (
-                    <Chat participants={participants} socket={socket} />
+            <Button ref={btnRef} colorScheme="teal" onClick={onOpen}>
+              Open
+            </Button>
+
+            <Drawer
+              isOpen={isOpen}
+              size="sm"
+              placement="right"
+              onClose={onClose}
+              finalFocusRef={btnRef}
+            >
+              <DrawerContent>
+                <DrawerCloseButton />
+                <DrawerHeader>
+                  <ChatParticipants />
+                </DrawerHeader>
+                <DrawerBody>
+                  {showChat === true ? (
+                    <>
+                      {socket && (
+                        <Chat participants={participants} socket={socket} />
+                      )}
+                    </>
+                  ) : (
+                    <Participants
+                      participants={participants}
+                      handlePromotion={handlePromotion}
+                      handleDemotion={handleDemotion}
+                    />
                   )}
-                </>
-              ) : (
-                <Participants
-                  participants={participants}
-                  handlePromotion={handlePromotion}
-                  handleDemotion={handleDemotion}
-                />
-              )}
-            </Flex>
+                </DrawerBody>
+              </DrawerContent>
+            </Drawer>
           </Flex>
         ) : (
           'You are not allowed to view this page....'
