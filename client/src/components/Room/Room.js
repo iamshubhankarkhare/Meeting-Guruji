@@ -22,6 +22,7 @@ const Room = () => {
   const { currentUser } = useAuth();
 
   const ENDPOINT = process.env.REACT_APP_ENDPOINT;
+
   useEffect(() => {
     socket = io(ENDPOINT);
     const roomId = id;
