@@ -22,10 +22,6 @@ if (process.env.NODE_ENV === 'production') {
   });
 }
 //
-// app.get('/', (req, res) => {
-//   res.send('hello');
-// });
-//
 let sockets = {}; // socketId: { email, name, roomId, role }
 let rooms = {}; // roomId: [{ email, name, sockets: [socketId...], primaryRole },...]
 let peers = {}; // roomId: [peerId,...]
@@ -242,7 +238,7 @@ io.on('connection', (socket) => {
 
   // for peer
   socket.on('peer-join', (peerId) => {
-    const roomId = sockets[socket.id].roomId;
+    const roomId = sockets[socket.id] && sockets[socket.id].roomId;
 
     if (roomId in peers) peers[roomId].push(peerId);
     else peers[roomId] = [peerId];

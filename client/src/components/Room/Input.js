@@ -23,7 +23,7 @@ function InputMsg({ handleClick }) {
       <Button
         size="md"
         ml="4"
-        colorScheme="blue"
+        colorScheme="teal"
         onClick={() => handleClick(newMsg, setNewMsg)}
       >
         Send

@@ -16,7 +16,7 @@ const Participants = React.memo(
       <Flex h="80%" flexDirection="column" w="90%" mx="4">
         {participants.map((participant, i) => (
           <Flex justify="space-between" key={i} align="center" my="2">
-            <Text fontWeight="bold" fontSize="lg">
+            <Text fontSize="lg">
               {(participant.name.length > 30
                 ? participant.name.substring(0, 27) + '...'
                 : participant.name) + (i === 0 ? ' (You)' : '')}
@@ -27,7 +27,7 @@ const Participants = React.memo(
                   bg="none"
                   as={IconButton}
                   icon={<BsThreeDotsVertical />}
-                  color="blue.400"
+                  color="teal"
                 ></MenuButton>
                 <MenuList>
                   {participant.role === 'student' ? (

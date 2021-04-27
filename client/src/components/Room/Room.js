@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router';
 import {
   useDisclosure,
+  Icon,
   Text,
   Flex,
   Button,
@@ -13,6 +14,7 @@ import {
   DrawerContent,
   DrawerCloseButton,
 } from '@chakra-ui/react';
+import { RiChat4Line, RiArrowLeftLine } from 'react-icons/ri';
 import io from 'socket.io-client';
 import Chat from './Chat.js';
 import Participants from './Participants.js';
@@ -24,38 +26,31 @@ let socket;
 
 const Room = () => {
   const ChatParticipants = () => (
-    <>
-      <Flex mx="2">
-        <Button
-          size="md"
-          mt="2"
-          w="50%"
-          border="1px"
-          colorScheme="blue"
-          onClick={() => showChatHandler(true)}
-        >
-          Chat
-        </Button>
-        <Button
-          size="md"
-          mt="2"
-          w="50%"
-          border="1px"
-          colorScheme="blue"
-          onClick={() => showChatHandler(false)}
-        >
-          {`Participants (${participants.length})`}
-        </Button>
-      </Flex>
-    </>
+    <Flex mr="4" w="100%" justify="space-around" align="center" my="4">
+      <Button
+        mx="2"
+        size="md"
+        w="50%"
+        colorScheme="teal"
+        onClick={() => showChatHandler(true)}
+      >
+        Chat
+      </Button>
+      <Button
+        mr="2"
+        size="md"
+        w="50%"
+        colorScheme="teal"
+        onClick={() => showChatHandler(false)}
+      >
+        {`Participants (${participants.length})`}
+      </Button>
+    </Flex>
   );
   const [showChat, setShowChat] = useState(true);
   const [participants, setParticipants] = useState([]);
   const [teacherAccess, setTeacherAcess] = useState(true);
   const [roomExists, setRoomExists] = useState(false);
-
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const btnRef = React.useRef();
 
   const { id } = useParams();
   const isTeacher = window.location.hash === '#init' ? true : false;
@@ -68,6 +63,7 @@ const Room = () => {
   useEffect(() => {
     socket = io(ENDPOINT);
     const roomId = id;
+
     socket.emit('join', { currentUser, roomId, isTeacher }, (res) => {
       setTeacherAcess(res.teacherAccess);
       if (res.roomExists === undefined) setRoomExists(true);
@@ -151,39 +147,22 @@ const Room = () => {
                 </Text>
               </Flex>
             </Flex>
-            <Button ref={btnRef} colorScheme="teal" onClick={onOpen}>
-              Open
-            </Button>
-
-            <Drawer
-              isOpen={isOpen}
-              size="sm"
-              placement="right"
-              onClose={onClose}
-              finalFocusRef={btnRef}
-            >
-              <DrawerContent>
-                <DrawerCloseButton />
-                <DrawerHeader>
-                  <ChatParticipants />
-                </DrawerHeader>
-                <DrawerBody>
-                  {showChat === true ? (
-                    <>
-                      {socket && (
-                        <Chat participants={participants} socket={socket} />
-                      )}
-                    </>
-                  ) : (
-                    <Participants
-                      participants={participants}
-                      handlePromotion={handlePromotion}
-                      handleDemotion={handleDemotion}
-                    />
+            <Flex flexDirection="column" w="xl" bg="white">
+              <ChatParticipants />
+              {showChat === true ? (
+                <>
+                  {socket && (
+                    <Chat participants={participants} socket={socket} />
                   )}
-                </DrawerBody>
-              </DrawerContent>
-            </Drawer>
+                </>
+              ) : (
+                <Participants
+                  participants={participants}
+                  handlePromotion={handlePromotion}
+                  handleDemotion={handleDemotion}
+                />
+              )}
+            </Flex>
           </Flex>
         ) : (
           'You are not allowed to view this page....'
